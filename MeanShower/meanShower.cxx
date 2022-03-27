@@ -28,6 +28,7 @@ Magnets will pull them apart
 
 //Particle Interaction
 std::vector<?ParticelObj?> layerEdge(ParticleObj inPart){
+	//Use angleular average and RMS info in Tav and SLAC paper 
 	if (abs(inPart.idNum) == 11){ //Bremstralung
 
 	}
@@ -36,8 +37,15 @@ std::vector<?ParticelObj?> layerEdge(ParticleObj inPart){
 	}
 }
 
-//26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't
-//A more function appraoch to this problem
+/*26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't
+A more function appraoch to this problem
+
+*/
+
+/*
+27/03/2022 16:04, I think I should start with a 1d simple mean showering program everything splits in half as it passes through the detector just to test some of the basics then I should add more nuanced behaviors
+there is a lot of complexity present in showering and I don't want to waste my time figuring out the most ideal method of dealing with these sorts of interactions
+*/
 
 
 int main(){

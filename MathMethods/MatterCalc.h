@@ -2,6 +2,8 @@
 #define MATTERCALC_H
 
 #include <math.h>
+#include <vector>
+//#include <iostream>
 
 //Set up Constants
 namespace constants{
@@ -13,5 +15,7 @@ namespace constants{
 }
 
 double radLen(uint Znuc, double Ar, double rho, bool densityBool);
+
+double effRadLen(std::vector<double> X0Vec, std::vector<double> lenVec); //Effective radiation length for multi layered object (such as a colorimeter)
 
 #endif
