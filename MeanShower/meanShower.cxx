@@ -5,6 +5,7 @@
 //Root and other Libaries
 #include "TRandom3.h"
 #include "../MathMethods/MatterCalc.h"
+#include "../MathMethods/Particles.h"
 
 
 /*
@@ -24,6 +25,19 @@ Outline
 Magnets will pull them apart
 
 */
+
+//Particle Interaction
+std::vector<?ParticelObj?> layerEdge(ParticleObj inPart){
+	if (abs(inPart.idNum) == 11){ //Bremstralung
+
+	}
+	else if (inPart.idNum == 22){ //Pair production
+
+	}
+}
+
+//26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't
+//A more function appraoch to this problem
 
 
 int main(){
