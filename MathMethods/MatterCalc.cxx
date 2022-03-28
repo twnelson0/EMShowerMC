@@ -3,7 +3,7 @@
 #include <iostream>
 #include "MatterCalc.h"
 
-using namespace constants;
+using namespace physConstants;
 
 //Radiation length
 double radLen(uint Znuc, double Ar, double rho, bool densityBool = false){

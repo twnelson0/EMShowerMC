@@ -1,7 +1,10 @@
 #include <iostream>
 #include <vector>
-#include <math.h>
+#include <map>
+#include "MatterCalc.h"
+//#include <math.h>
 
+using namespace physConstants;
 /*class particle{
 public:
 	particle(double E, double m, double ){}
@@ -18,8 +21,42 @@ it assumes a 2d geometry and so the angle theta is with respect to the x-axis
 
 */
 
-//2d Particle Class
+//Generic 2-d particle class with an angle from x-axis and id number determined by PGD
 class particleR2{
+public:
+	particleR2(double E, double theta, int idNum){ //Energy must be in MeV
+		double pMag; //Magnitude of 3-momenta
+		p0 = E; //Store energy
+		partID = idNum; //Store Particle ID
+
+		//Determine type of particle
+		if (abs(idNum) == 11) m = m_e;
+		if (idNum == 22) m = 0;
+		if (idNum == 26) m = 50e3; //LLP Placeholder
+
+		//Obtain the 3-momeneta
+		pMag = sqrt(pow(E,2) - (m,2));
+		p1 = pMag*cos(theta);
+		p2 = pMag*sin(theta);
+	};
+	//~particleR2(); Destructor not needed?
+
+	//Get particle ID
+	int id() {return partID;}
+
+	//Kinematic information
+	double E() {return p0;}
+
+
+
+private:
+	double p0,p1,p2,m;
+	int partID;
+	
+};
+
+//2d Particle Class (with inheritance)
+/*class particleR2{
 public:
 	particleR2(double E, double theta, bool antiPart = false);
 	int idNum() {return partID;}
@@ -55,7 +92,7 @@ public:
 private:
 	//Calculate momenta given the angle
 	void setIDNum() {partID = 22;}
-};
+};*/
 
 //LLP Class
 /*class LLPR2 : public particleR2{

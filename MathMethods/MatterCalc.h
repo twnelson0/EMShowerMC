@@ -3,10 +3,11 @@
 
 #include <math.h>
 #include <vector>
+//#include <map>
 //#include <iostream>
 
-//Set up Constants
-namespace constants{
+//Set up Constants that will be useful
+namespace physConstants{
 	const double alpha = 1/137.;
 	const double m_e = 0.511; //MeV
 	const double N_Av = 6.022e23;

@@ -7,10 +7,9 @@ int main(){
 	//std::cout << "The radiation length of Lead is " << radLen(82,207.2,11.350,false) << std::endl;
 	//std::cout << "Alpha = " << constants::alpha << std::endl;
 
-	elecR2 elec = elecR2(1,0,false);
-	elecR2 pos = elecR2(1,0,true);
-	std::cout << elec.idNum() << std::endl;
-	std::cout << pos.idNum() << std::endl;
+	particleR2 testPhoton = particleR2(10,0,22);
+	std::cout << testPhoton.id() << std::endl;
+	std::cout << testPhoton.E() << std::endl;
 
 	return 0;
 }
