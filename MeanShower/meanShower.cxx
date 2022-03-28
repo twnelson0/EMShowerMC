@@ -50,37 +50,54 @@ void getStatus(std::vector<particleR2> shower){
 	}
 }
 
+//Check that lepton number is being conserved
+int leptonNumber(std::vector<particleR2> shower){
+	int leptonNumber = 0;
+	for (particleR2 & part : shower){
+		if (abs(part.id()) == 11) leptonNumber += part.id();
+		else continue;
+	}
+
+	return leptonNumber/11;
+}
+
 //Paticle interaction in 1d
-void showerAction(std::vector<particleR2>& crntGen){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
-	uint incidentCount = 0;
+void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
+	uint incCount = 0;
 
 	//Loop over all incident particles in the shower
-	for (particleR2 & part : crntGen){
+	for (particleR2 & part : crntGen){ //I ultimently think that this structure is causing problems
+		//sparticleR2 part = crntGen.at(i);
+		double incEnergy = part.E(); //Store incident energy of each particle
 
-		//Pair production
-		if (part.id() == 22){
-			crntGen.push_back(particleR2(part.E()/2,0,11)); 
-			crntGen.push_back(particleR2(part.E()/2,0,-11)); //Bug second particle created has 0 energy
-			//getStatus(crntGen);
+		//Photon Interactions
+		if (part.id() == 22 && incEnergy >= 2*m_e){ //Pair Production
+			//std::cout << "!Pair Prdoucing!" << std::endl;
+			crntGen.push_back(particleR2(incEnergy/2,0,11)); 
+			crntGen.push_back(particleR2(incEnergy/2,0,-11)); 
 			
-			crntGen.erase(crntGen.begin());
-		}
+			//crntGen.erase(crntGen.begin());
+		}else if (incEnergy < 2*m_e){std::cout << "No Longer pair producing" << std::endl;}
 		
-		//Bremstralung
-		else if (abs(part.id()) == 11){
-			crntGen.push_back(particleR2(part.E()/2,0,part.id())); 
-			std::cout << part.E()/2 << std::endl;
-			crntGen.push_back(particleR2(part.E()/2,0,22)); //Bug in particle shower photons created by Bremstarlung have no energy
+		//Electron/Poistron Interactions
+		else if(abs(part.id()) == 11 && incEnergy >= E_Crit){ //Bremsstralung
+			//std::cout << "!Bremsstralunging!" << std::endl;
+			crntGen.push_back(particleR2(incEnergy/2,0,part.id()));  //This is only producing electrons or positrons >:(
+			crntGen.push_back(particleR2(incEnergy/2,0,22)); 
 
-			crntGen.erase(crntGen.begin());
-		}else{
+			//crntGen.erase(crntGen.begin());
+		}else if (incEnergy < E_Crit){std::cout << "No Longer Bremsstralunging" << std::endl;}
+
+		else{
 			std::cout << "Not Recognized" << std::endl;
 		}
 
-		incidentCount++;
+		incCount++;
 	}
 
-	std::cout << "There are " << incidentCount << " incident particles" << std::endl;
+	crntGen.erase(crntGen.begin(),crntGen.begin() + incCount); //This is not functioning correctly/how I expect it to
+
+	std::cout << "There are " << incCount << " incident particles" << std::endl;
 }
 
 /*26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't
@@ -101,31 +118,38 @@ int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
 	double E0 = 50e3;
-	particleR2 initPart = particleR2(E0,0,22);
+	particleR2 initPart = particleR2(E0,0,-11);
 	std::vector<particleR2> showerVec;
 	showerVec.push_back(initPart);
 
-	for (int t = 0; t < 2; t++){
-		showerAction(showerVec); //Shower each bunch of particles
-		std::cout << "There are " << showerVec.size() << " particles after " << t + 1 << " generations" << std::endl;
+	int startLeptonNum = leptonNumber(showerVec);
+
+	for (int t = 0; t < 15; t++){
+		showerAction1d(showerVec,5); //Shower each bunch of particles
+		std::cout << "There are " << showerVec.size() << " particles in the shower after " << t + 1 << " generations" << std::endl;
+
+		//Check Lepton Number conversion
+		if (startLeptonNum != leptonNumber(showerVec)) std::cout << "Lepton Number Not Being Conserved" << std::endl;
 		double Ecrt = 0;
 
 		for (particleR2 & part : showerVec){
-			std::cout << part.id() << std::endl;
+			//std::cout << part.id() << std::endl;
 			Ecrt += part.E();
 		}
 
 		//Check energy conservation 
-		if (Ecrt != E0) std::cout << "!Energy is Not being conserved!" << std::endl;
-
+		if (Ecrt != E0) {std::cout << "!Energy is Not being conserved!" << std::endl; getStatus(showerVec);}
 	}
 }
 
 
 /*
 Bug List:
-1. Second particle produced in interactions always has 0 energy
+ 
 
 Other Stuff:
 Running over 24 layers and c++ is not happy a 2^24ish element vector makes c++ seg fault, I may need a better way to store the data on each shower (perhaps an LHE File??)
+Shower information needs to be stored in an external file or shower information should not be stored but rather useful information should be calucalted from information about the shower
+Need to deal with attenuation of particles otherwise c++ will segfault and die
+
 */

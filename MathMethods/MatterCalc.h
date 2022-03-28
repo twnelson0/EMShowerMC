@@ -13,10 +13,13 @@ namespace physConstants{
 	const double N_Av = 6.022e23;
 	const double r0 = 2.818e-15; //Classical Electron radius
 	const double X0_pb = 6.37; //Radiation length of lead in g/cm^2
+	//const double eCrit_pb = ; //Critical energy of lead
 }
 
 double radLen(uint Znuc, double Ar, double rho, bool densityBool);
 
 double effRadLen(std::vector<double> X0Vec, std::vector<double> lenVec); //Effective radiation length for multi layered object (such as a colorimeter)
+
+//double critE(); //Critical energy of electron/positron to bremstralung
 
 #endif

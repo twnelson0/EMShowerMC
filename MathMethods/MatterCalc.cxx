@@ -31,3 +31,9 @@ double effRadLen(std::vector<double> X0Vec, std::vector<double> lenVec){
 
 	return pow(X0Inv,-1);
 }
+
+
+//Critical Energy of electron/positrons to bremsstralung
+/*double critE(){
+
+*/
