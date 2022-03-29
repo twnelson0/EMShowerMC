@@ -3,7 +3,7 @@
 #include <vector>
 
 //Root and other Libaries
-#include "TRandom3.h"
+//#include "TRandom3.h"
 #include "../MathMethods/MatterCalc.h"
 #include "../MathMethods/particles.h"
 
@@ -67,7 +67,6 @@ void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a re
 
 	//Loop over all incident particles in the shower
 	for (particleR2 & part : crntGen){ //I ultimently think that this structure is causing problems
-		//sparticleR2 part = crntGen.at(i);
 		double incEnergy = part.E(); //Store incident energy of each particle
 
 		//Photon Interactions
@@ -97,7 +96,55 @@ void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a re
 
 	crntGen.erase(crntGen.begin(),crntGen.begin() + incCount); //This is not functioning correctly/how I expect it to
 
-	std::cout << "There are " << incCount << " incident particles" << std::endl;
+	//std::cout << "There are " << incCount << " incident particles" << std::endl;
+}
+
+
+//Second version of the 1 dimeinsional showering function with hopefully less memory problems
+void showerAction1d_2(showerR2 inShower, double E_Crit){
+	int inCount = inShower.showerSize();
+	
+	for (int i = 0; i < inCount; i++){
+		double partTheta,partP;
+		double incEnergy = inShower.EVec.at(i);
+
+		//Photon Interactions
+		if (inShower.idVec.at(i) == 22 && incEnergy>= 2*m_e){ //Pair production
+			//Electron
+			inShower.idVec.push_back(11);
+			inShower.EVec.push_back(incEnergy/2);
+			inShower.pVec.push_back(sqrt(pow(incEnergy/2,2) - pow(m_e,2)));
+			inShower.thetaVec.push_back(0);
+
+			//Positron
+			inShower.idVec.push_back(-11);
+			inShower.EVec.push_back(incEnergy/2);
+			inShower.pVec.push_back(sqrt(pow(incEnergy/2,2) - pow(m_e,2)));
+			inShower.thetaVec.push_back(0);
+
+		}else if (incEnergy < 2*m_e){std::cout << "No longer pair producing" << std::endl;}
+
+		//Lepton Interactions
+		if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit){ //Bremsstralung
+			//Lepton
+			inShower.idVec.push_back(inShower.idVec.at(i));
+			inShower.EVec.push_back(incEnergy/2);
+			inShower.pVec.push_back(sqrt(pow(incEnergy/2,2) - pow(m_e,2)));
+			inShower.thetaVec.push_back(0);
+
+			//Photon
+			inShower.idVec.push_back(22);
+			inShower.EVec.push_back(incEnergy/2);
+			inShower.pVec.push_back(incEnergy/2);
+			inShower.thetaVec.push_back(0);
+		}
+	}
+
+	//Clear old particles
+	inShower.idVec.erase(inShower.idVec.begin(), inShower.idVec.begin() + inCount);
+	inShower.EVec.erase(inShower.EVec.begin(), inShower.EVec.begin() + inCount);
+	inShower.thetaVec.erase(inShower.thetaVec.begin(), inShower.thetaVec.begin() + inCount);
+	inShower.pVec.erase(inShower.pVec.begin(), inShower.pVec.begin() + inCount);
 }
 
 /*26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't

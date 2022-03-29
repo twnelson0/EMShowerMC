@@ -46,6 +46,8 @@ public:
 
 	//Kinematic information
 	double E() {return p0;}
+	double p() {return sqrt(pow(p1,2) + pow(p2,2));}
+	double theta() {return acos(p1/this->p());}
 
 
 
@@ -54,6 +56,34 @@ private:
 	int partID;
 	
 };
+
+
+
+//2d Shower object 
+class showerR2{
+public:
+	showerR2(particleR2 incPart){
+		idVec.push_back(incPart.id());
+		EVec.push_back(incPart.E());
+		thetaVec.push_back(incPart.theta());
+		pVec.push_back(incPart.p());
+	}
+
+	int showerSize(){return idVec.size();}
+
+
+	//~showerR2();
+
+	//Public varaibles
+	std::vector<int> idVec;
+	std::vector<double> EVec;
+	std::vector<double> thetaVec;
+	std::vector<double> pVec;
+
+//private:
+
+};
+
 
 //2d Particle Class (with inheritance)
 /*class particleR2{
