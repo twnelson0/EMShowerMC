@@ -3,7 +3,7 @@
 #include <vector>
 
 //Root and other Libaries
-//#include "TRandom3.h"
+//#include "TRandom3.h" *NO Idea if I'm going to use ROOT libaries*
 #include "../MathMethods/MatterCalc.h"
 #include "../MathMethods/particles.h"
 
@@ -166,26 +166,29 @@ int main(){
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
 	double E0 = 50e3;
 	particleR2 initPart = particleR2(E0,0,-11);
-	std::vector<particleR2> showerVec;
-	showerVec.push_back(initPart);
+	showerR2 inShower = showerR2(initPart);
+	//std::vector<particleR2> showerVec;
+	//showerVec.push_back(initPart);
 
-	int startLeptonNum = leptonNumber(showerVec);
+	int startLeptonNum = leptonNumber(inShower);
 
 	for (int t = 0; t < 15; t++){
-		showerAction1d(showerVec,5); //Shower each bunch of particles
-		std::cout << "There are " << showerVec.size() << " particles in the shower after " << t + 1 << " generations" << std::endl;
+		//showerAction1d(showerVec,5); //Shower each bunch of particles
+		//std::cout << "There are " << showerVec.size() << " particles in the shower after " << t + 1 << " generations" << std::endl;
+		showerAction1d_2(inShower,5);
+		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
 		//Check Lepton Number conversion
-		if (startLeptonNum != leptonNumber(showerVec)) std::cout << "Lepton Number Not Being Conserved" << std::endl;
+		if (startLeptonNum != inShower.leptonNumber()) std::cout << "Lepton Number Not Being Conserved" << std::endl;
 		double Ecrt = 0;
 
-		for (particleR2 & part : showerVec){
+		/*for (particleR2 & part : showerVec){
 			//std::cout << part.id() << std::endl;
 			Ecrt += part.E();
-		}
+		}*/
 
 		//Check energy conservation 
-		if (Ecrt != E0) {std::cout << "!Energy is Not being conserved!" << std::endl; getStatus(showerVec);}
+		//if (Ecrt != E0) {std::cout << "!Energy is Not being conserved!" << std::endl; getStatus(showerVec);}
 	}
 }
 

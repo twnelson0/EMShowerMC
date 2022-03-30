@@ -69,7 +69,17 @@ public:
 		pVec.push_back(incPart.p());
 	}
 
-	int showerSize(){return idVec.size();}
+	int showerSize(){return this->idVec.size();}
+
+	int leptonNumber(){
+		int leptonNumber = 0;
+		for (int i = 0; i < this->showerSize(); i++){
+			if (abs(this->idVec.at(i)) == 11) leptonNumber+=this->idVec.at(i);
+			else continue;
+		}
+
+		return leptonNumber/11;
+	}
 
 
 	//~showerR2();
