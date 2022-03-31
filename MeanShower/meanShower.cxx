@@ -61,7 +61,7 @@ int leptonNumber(std::vector<particleR2> shower){
 	return leptonNumber/11;
 }
 
-//Paticle interaction in 1d
+//Paticle interaction in 1d WILL CAUSE SEG FAULTS!!
 void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
 	uint incCount = 0;
 
@@ -101,7 +101,7 @@ void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a re
 
 
 //Second version of the 1 dimeinsional showering function with hopefully less memory problems
-void showerAction1d_2(showerR2 inShower, double E_Crit){
+void showerAction1d_2(showerR2 &inShower, double E_Crit){
 	int inCount = inShower.showerSize();
 	
 	for (int i = 0; i < inCount; i++){
@@ -125,7 +125,7 @@ void showerAction1d_2(showerR2 inShower, double E_Crit){
 		}else if (incEnergy < 2*m_e){std::cout << "No longer pair producing" << std::endl;}
 
 		//Lepton Interactions
-		if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit){ //Bremsstralung
+		else if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit){ //Bremsstralung
 			//Lepton
 			inShower.idVec.push_back(inShower.idVec.at(i));
 			inShower.EVec.push_back(incEnergy/2);
@@ -137,6 +137,12 @@ void showerAction1d_2(showerR2 inShower, double E_Crit){
 			inShower.EVec.push_back(incEnergy/2);
 			inShower.pVec.push_back(incEnergy/2);
 			inShower.thetaVec.push_back(0);
+		}else if (incEnergy < E_Crit) std::cout << "No longer Bremsstrahlunging" << std::endl;
+
+		else{
+			std::cout << "The Chair doesn't recognize your ass" << std::endl;
+			inShower.printPart(i);
+
 		}
 	}
 
@@ -170,9 +176,10 @@ int main(){
 	//std::vector<particleR2> showerVec;
 	//showerVec.push_back(initPart);
 
-	int startLeptonNum = leptonNumber(inShower);
+	//int startLeptonNum = leptonNumber(inShower);
+	int startLeptonNum = inShower.leptonNumber();
 
-	for (int t = 0; t < 15; t++){
+	for (int t = 0; t < 2; t++){
 		//showerAction1d(showerVec,5); //Shower each bunch of particles
 		//std::cout << "There are " << showerVec.size() << " particles in the shower after " << t + 1 << " generations" << std::endl;
 		showerAction1d_2(inShower,5);

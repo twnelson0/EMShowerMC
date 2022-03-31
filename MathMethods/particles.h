@@ -81,6 +81,13 @@ public:
 		return leptonNumber/11;
 	}
 
+	void printPart(int i){
+		std::cout << "Particle = " << this->idVec.at(i) << std::endl;
+		std::cout << "Energy = " << this->EVec.at(i) << std::endl;
+		std::cout << "Angle = " << this->thetaVec.at(i) << std::endl;
+		std::cout << "Momenta = " << this->pVec.at(i) << std::endl;
+	}
+
 
 	//~showerR2();
 
