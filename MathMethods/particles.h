@@ -49,8 +49,6 @@ public:
 	double p() {return sqrt(pow(p1,2) + pow(p2,2));}
 	double theta() {return acos(p1/this->p());}
 
-
-
 private:
 	double p0,p1,p2,m;
 	int partID;

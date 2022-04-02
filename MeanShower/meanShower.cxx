@@ -140,13 +140,12 @@ void showerAction1d_2(showerR2 &inShower, double E_Crit){
 		}else if (incEnergy < E_Crit) std::cout << "No longer Bremsstrahlunging" << std::endl;
 
 		else{
-			std::cout << "The Chair doesn't recognize your ass" << std::endl;
+			std::cout << "Not Recognized" << std::endl;
 			inShower.printPart(i);
-
 		}
 	}
 
-	//Clear old particles
+	//Clear old particles (attenuation after shower Max needs work)
 	inShower.idVec.erase(inShower.idVec.begin(), inShower.idVec.begin() + inCount);
 	inShower.EVec.erase(inShower.EVec.begin(), inShower.EVec.begin() + inCount);
 	inShower.thetaVec.erase(inShower.thetaVec.begin(), inShower.thetaVec.begin() + inCount);
@@ -179,7 +178,7 @@ int main(){
 	//int startLeptonNum = leptonNumber(inShower);
 	int startLeptonNum = inShower.leptonNumber();
 
-	for (int t = 0; t < 2; t++){
+	for (int t = 0; t < 25; t++){
 		//showerAction1d(showerVec,5); //Shower each bunch of particles
 		//std::cout << "There are " << showerVec.size() << " particles in the shower after " << t + 1 << " generations" << std::endl;
 		showerAction1d_2(inShower,5);
@@ -189,13 +188,12 @@ int main(){
 		if (startLeptonNum != inShower.leptonNumber()) std::cout << "Lepton Number Not Being Conserved" << std::endl;
 		double Ecrt = 0;
 
-		/*for (particleR2 & part : showerVec){
-			//std::cout << part.id() << std::endl;
-			Ecrt += part.E();
-		}*/
+		for (int i = 0; i < inShower.showerSize(); i++){
+			Ecrt += inShower.EVec.at(i);
+		}
 
 		//Check energy conservation 
-		//if (Ecrt != E0) {std::cout << "!Energy is Not being conserved!" << std::endl; getStatus(showerVec);}
+		if (Ecrt != E0) std::cout << "!Energy is Not being conserved!" << std::endl;
 	}
 }
 
