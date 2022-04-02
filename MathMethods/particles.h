@@ -79,11 +79,32 @@ public:
 		return leptonNumber/11;
 	}
 
+	//Count the number of charged tracks in the shower
+	int chargedTracks(){
+		int chargedTracks = 0;
+
+		for (int i = 0; i < this->showerSize(); i++){
+			if (abs(this->idVec.at(i)) == 11) chargedTracks+=1;
+			else continue;
+		}
+
+		return chargedTracks;
+	}
+
 	void printPart(int i){
 		std::cout << "Particle = " << this->idVec.at(i) << std::endl;
 		std::cout << "Energy = " << this->EVec.at(i) << std::endl;
 		std::cout << "Angle = " << this->thetaVec.at(i) << std::endl;
 		std::cout << "Momenta = " << this->pVec.at(i) << std::endl;
+	}
+
+
+	//Remove specific particle from shower structure 
+	void clearParticle(int partIndx){
+		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
+		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
+		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
+		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
 	}
 
 
@@ -95,8 +116,9 @@ public:
 	std::vector<double> thetaVec;
 	std::vector<double> pVec;
 
-//private:
-
+/*private:
+	std::vector<auto>[4] vectorAray; //Array of shower atribute vectors
+*/
 };
 
 

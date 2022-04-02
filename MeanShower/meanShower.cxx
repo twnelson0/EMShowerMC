@@ -3,7 +3,7 @@
 #include <vector>
 
 //Root and other Libaries
-//#include "TRandom3.h" *NO Idea if I'm going to use ROOT libaries*
+#include "TRandom3.h" //*NO Idea if I'm going to use ROOT libaries*
 #include "../MathMethods/MatterCalc.h"
 #include "../MathMethods/particles.h"
 
@@ -39,7 +39,7 @@ Magnets will pull them apart
 	}
 }*/
 
-//Get status of particle shower for debugging purposes
+//Get status of particle shower for debugging purposes (Depercated)
 void getStatus(std::vector<particleR2> shower){
 	std::cout << "!!SHOWER STATUS!!" << std::endl;
 	std::cout << "There are " << shower.size() << " particles" << std::endl;
@@ -50,7 +50,7 @@ void getStatus(std::vector<particleR2> shower){
 	}
 }
 
-//Check that lepton number is being conserved
+//Check that lepton number is being conserved (Depercated)
 int leptonNumber(std::vector<particleR2> shower){
 	int leptonNumber = 0;
 	for (particleR2 & part : shower){
@@ -61,8 +61,8 @@ int leptonNumber(std::vector<particleR2> shower){
 	return leptonNumber/11;
 }
 
-//Paticle interaction in 1d WILL CAUSE SEG FAULTS!!
-void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
+//Paticle interaction in 1d WILL CAUSE SEG FAULTS!! (Deperacted)
+void showerAction1d_Dep(std::vector<particleR2>& crntGen, double E_Crit){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
 	uint incCount = 0;
 
 	//Loop over all incident particles in the shower
@@ -88,7 +88,7 @@ void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a re
 		}else if (incEnergy < E_Crit){std::cout << "No Longer Bremsstralunging" << std::endl;}
 
 		else{
-			std::cout << "Not Recognized" << std::endl;
+			std::cout << "Input Not Recognized" << std::endl;
 		}
 
 		incCount++;
@@ -101,8 +101,9 @@ void showerAction1d(std::vector<particleR2>& crntGen, double E_Crit){ //For a re
 
 
 //Second version of the 1 dimeinsional showering function with hopefully less memory problems
-void showerAction1d_2(showerR2 &inShower, double E_Crit){
+void showerAction1d(showerR2 &inShower, double E_Crit){
 	int inCount = inShower.showerSize();
+	int showPart = 0; //Count the number of particles undergoing radiative processes and pair production
 	
 	for (int i = 0; i < inCount; i++){
 		double partTheta,partP;
@@ -122,6 +123,9 @@ void showerAction1d_2(showerR2 &inShower, double E_Crit){
 			inShower.pVec.push_back(sqrt(pow(incEnergy/2,2) - pow(m_e,2)));
 			inShower.thetaVec.push_back(0);
 
+			showPart+=1; //Increment number of incident showering particles by 1
+			inShower.clearParticle(i);
+
 		}else if (incEnergy < 2*m_e){std::cout << "No longer pair producing" << std::endl;}
 
 		//Lepton Interactions
@@ -137,19 +141,23 @@ void showerAction1d_2(showerR2 &inShower, double E_Crit){
 			inShower.EVec.push_back(incEnergy/2);
 			inShower.pVec.push_back(incEnergy/2);
 			inShower.thetaVec.push_back(0);
-		}else if (incEnergy < E_Crit) std::cout << "No longer Bremsstrahlunging" << std::endl;
+
+			showPart+=1; //Increment number of incident showering particle
+			inShower.clearParticle(i);
+
+		}else if (incEnergy < E_Crit){ std::cout << "No longer Bremsstrahlunging" << std::endl;}
 
 		else{
-			std::cout << "Not Recognized" << std::endl;
+			std::cout << "Input Not Recognized" << std::endl;
 			inShower.printPart(i);
 		}
 	}
 
 	//Clear old particles (attenuation after shower Max needs work)
-	inShower.idVec.erase(inShower.idVec.begin(), inShower.idVec.begin() + inCount);
+	/*inShower.idVec.erase(inShower.idVec.begin(), inShower.idVec.begin() + inCount);
 	inShower.EVec.erase(inShower.EVec.begin(), inShower.EVec.begin() + inCount);
 	inShower.thetaVec.erase(inShower.thetaVec.begin(), inShower.thetaVec.begin() + inCount);
-	inShower.pVec.erase(inShower.pVec.begin(), inShower.pVec.begin() + inCount);
+	inShower.pVec.erase(inShower.pVec.begin(), inShower.pVec.begin() + inCount);*/
 }
 
 /*26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't
@@ -181,7 +189,7 @@ int main(){
 	for (int t = 0; t < 25; t++){
 		//showerAction1d(showerVec,5); //Shower each bunch of particles
 		//std::cout << "There are " << showerVec.size() << " particles in the shower after " << t + 1 << " generations" << std::endl;
-		showerAction1d_2(inShower,5);
+		showerAction1d(inShower,5);
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
 		//Check Lepton Number conversion
