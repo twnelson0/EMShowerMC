@@ -101,10 +101,10 @@ public:
 
 	//Remove specific particle from shower structure 
 	void clearParticle(int partIndx){
-		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
-		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
-		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
-		this->idVec.erase(this->idVec.begin(),this->idVec.begin() + partIndx);
+		this->idVec.erase(this->idVec.begin() + partIndx);
+		this->EVec.erase(this->EVec.begin() + partIndx);
+		this->thetaVec.erase(this->thetaVec.begin() + partIndx);
+		this->pVec.erase(this->pVec.begin() + partIndx);
 	}
 
 
