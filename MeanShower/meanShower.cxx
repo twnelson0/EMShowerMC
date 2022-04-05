@@ -101,26 +101,27 @@ void showerAction1d_Dep(std::vector<particleR2>& crntGen, double E_Crit){ //For 
 
 
 //Second version of the 1 dimeinsional showering function with hopefully less memory problems
-void showerAction1d(showerR2 &inShower, double E_Crit){
+void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
 	int inCount = inShower.showerSize();
 	int showPart = 0; //Count the number of particles undergoing radiative processes and pair production
 	
 	for (int i = 0; i < inCount; i++){
 		double partTheta,partP;
 		double incEnergy = inShower.EVec.at(i);
+		double splitFrac = gen->Uniform(1);
 
 		//Photon Interactions
 		if (inShower.idVec.at(i) == 22 && incEnergy>= 2*m_e){ //Pair production
 			//Electron
 			inShower.idVec.push_back(11);
-			inShower.EVec.push_back(incEnergy/2);
-			inShower.pVec.push_back(sqrt(pow(incEnergy/2,2) - pow(m_e,2)));
+			inShower.EVec.push_back(incEnergy*splitFrac);
+			inShower.pVec.push_back(sqrt(pow(incEnergy*splitFrac,2) - pow(m_e,2)));
 			inShower.thetaVec.push_back(0);
 
 			//Positron
 			inShower.idVec.push_back(-11);
-			inShower.EVec.push_back(incEnergy/2);
-			inShower.pVec.push_back(sqrt(pow(incEnergy/2,2) - pow(m_e,2)));
+			inShower.EVec.push_back(incEnergy*(1-splitFrac));
+			inShower.pVec.push_back(sqrt(pow(incEnergy*(1-splitFrac),2) - pow(m_e,2)));
 			inShower.thetaVec.push_back(0);
 
 			showPart+=1; //Increment number of incident showering particles by 1
@@ -132,14 +133,14 @@ void showerAction1d(showerR2 &inShower, double E_Crit){
 		else if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit){ //Bremsstralung
 			//Lepton
 			inShower.idVec.push_back(inShower.idVec.at(i));
-			inShower.EVec.push_back(incEnergy/2);
-			inShower.pVec.push_back(sqrt(pow(incEnergy/2,2) - pow(m_e,2)));
+			inShower.EVec.push_back(incEnergy*splitFrac);
+			inShower.pVec.push_back(sqrt(pow(incEnergy*splitFrac,2) - pow(m_e,2)));
 			inShower.thetaVec.push_back(0);
 
 			//Photon
 			inShower.idVec.push_back(22);
-			inShower.EVec.push_back(incEnergy/2);
-			inShower.pVec.push_back(incEnergy/2);
+			inShower.EVec.push_back(incEnergy*(1-splitFrac));
+			inShower.pVec.push_back(incEnergy*(1-splitFrac));
 			inShower.thetaVec.push_back(0);
 
 			showPart+=1; //Increment number of incident showering particle
@@ -180,16 +181,16 @@ int main(){
 	double E0 = 50e3;
 	particleR2 initPart = particleR2(E0,0,-11);
 	showerR2 inShower = showerR2(initPart);
+	TRandom3 *randGen = new TRandom3();
 	//std::vector<particleR2> showerVec;
 	//showerVec.push_back(initPart);
 
 	//int startLeptonNum = leptonNumber(inShower);
 	int startLeptonNum = inShower.leptonNumber();
 
-	for (int t = 0; t < 25; t++){
-		//showerAction1d(showerVec,5); //Shower each bunch of particles
-		//std::cout << "There are " << showerVec.size() << " particles in the shower after " << t + 1 << " generations" << std::endl;
-		showerAction1d(inShower,5);
+	//Propogate over 25 Radiation Lengths
+	for (int t = 0; t < 4; t++){
+		showerAction1d(inShower,5, randGen);
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
 		//Check Lepton Number conversion
@@ -201,8 +202,13 @@ int main(){
 		}
 
 		//Check energy conservation 
-		if (Ecrt != E0) std::cout << "!Energy is Not being conserved!" << std::endl;
+		if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << std::endl;}
 	}
+
+
+
+	//Memory managment 
+	delete randGen;
 }
 
 
