@@ -153,12 +153,19 @@ void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
 			inShower.printPart(i);
 		}
 	}
+}
 
-	//Clear old particles (attenuation after shower Max needs work)
-	/*inShower.idVec.erase(inShower.idVec.begin(), inShower.idVec.begin() + inCount);
-	inShower.EVec.erase(inShower.EVec.begin(), inShower.EVec.begin() + inCount);
-	inShower.thetaVec.erase(inShower.thetaVec.begin(), inShower.thetaVec.begin() + inCount);
-	inShower.pVec.erase(inShower.pVec.begin(), inShower.pVec.begin() + inCount);*/
+
+//Determine the physical location of each interaction given 
+std::vector<double> getIntrPoints(int NX0, double size){
+	std::vector<double> interPoints;
+	double X0 = size/(double) NX0;
+
+	for (int n = 1; n < NX0; n++){
+		interPoints.push_back(n*X0);
+	}
+
+	return interPoints;
 }
 
 /*26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't
@@ -189,7 +196,7 @@ int main(){
 	int startLeptonNum = inShower.leptonNumber();
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 4; t++){
+	for (int t = 0; t < 25; t++){
 		showerAction1d(inShower,5, randGen);
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
@@ -202,7 +209,7 @@ int main(){
 		}
 
 		//Check energy conservation 
-		if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << std::endl;}
+		//if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << Ecrt << " != " << E0 << std::endl;}
 	}
 
 
