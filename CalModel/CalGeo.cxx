@@ -3,8 +3,8 @@
 #include <cmath>
 
 
-double *layerTerminus(double startPoint){
-	double[2] layarArr;
+double* layerTerminus(double startPoint){
+	double layerArr[2];
 	double startFloor, layerStart, layerEnd;
 	int layerMod;
 
@@ -18,7 +18,7 @@ double *layerTerminus(double startPoint){
 	return layerArr;
 }
 
-double layerTrackLen(double edgeVal, bool start = true){
+double layerTrackLen(double edgeVal, bool start){
 	double trackLen;
 	double *layerEnds = layerTerminus(edgeVal); //Get the start and end points of the layer
 
