@@ -28,17 +28,6 @@ Magnets will pull them apart
 
 */
 
-//Particle Interaction
-/*std::vector<?ParticelObj?> layerEdge(ParticleObj inPart){
-	//Use angleular average and RMS info in Tav and SLAC paper 
-	if (abs(inPart.idNum) == 11){ //Bremstralung
-
-	}
-	else if (inPart.idNum == 22){ //Pair production
-
-	}
-}*/
-
 //Get status of particle shower for debugging purposes (Depercated)
 void getStatus(std::vector<particleR2> shower){
 	std::cout << "!!SHOWER STATUS!!" << std::endl;
@@ -146,7 +135,12 @@ void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
 			showPart+=1; //Increment number of incident showering particle
 			inShower.clearParticle(i);
 
-		}else if (incEnergy < E_Crit){ std::cout << "No longer Bremsstrahlunging" << std::endl;}
+		}else if (incEnergy < E_Crit){ 
+			std::cout << "No longer Bremsstrahlunging" << std::endl;
+
+			//Simulate Ionization loss
+			
+		}
 
 		else{
 			std::cout << "Input Not Recognized" << std::endl;
@@ -167,19 +161,6 @@ std::vector<double> getIntrPoints(int NX0, double size){
 
 	return interPoints;
 }
-
-/*26/03/2022 22:39, I'm wondering if I need these particle objects in the E/2 splitting model they don't matter, it may matter for a more nuanced model but I'm wondering if there isn't
-A more function appraoch to this problem
-
-*/
-
-/*
-27/03/2022 16:04, I think I should start with a 1d simple mean showering program everything splits in half as it passes through the detector just to test some of the basics then I should add more nuanced behaviors
-there is a lot of complexity present in showering and I don't want to waste my time figuring out the most ideal method of dealing with these sorts of interactions
-
-27/03/2022 20:00, I think in the 1 d model I will have a vector of particles and on every iteration I'll loop over the vector shower that element and erase the first element of the vector leaving me with only
-the current generation of the shower
-*/
 
 
 int main(){
