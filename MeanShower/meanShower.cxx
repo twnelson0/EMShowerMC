@@ -29,66 +29,6 @@ Magnets will pull them apart
 
 */
 
-//Get status of particle shower for debugging purposes (Depercated)
-void getStatus(std::vector<particleR2> shower){
-	std::cout << "!!SHOWER STATUS!!" << std::endl;
-	std::cout << "There are " << shower.size() << " particles" << std::endl;
-
-	for (particleR2 & part : shower){
-		std::cout << part.id() << std::endl;
-		std::cout << part.E() << std::endl;
-	}
-}
-
-//Check that lepton number is being conserved (Depercated)
-int leptonNumber(std::vector<particleR2> shower){
-	int leptonNumber = 0;
-	for (particleR2 & part : shower){
-		if (abs(part.id()) == 11) leptonNumber += part.id();
-		else continue;
-	}
-
-	return leptonNumber/11;
-}
-
-//Paticle interaction in 1d WILL CAUSE SEG FAULTS!! (Deperacted)
-/*void showerAction1d_Dep(std::vector<particleR2>& crntGen, double E_Crit){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
-	uint incCount = 0;
-
-	//Loop over all incident particles in the shower
-	for (particleR2 & part : crntGen){ //I ultimently think that this structure is causing problems
-		double incEnergy = part.E(); //Store incident energy of each particle
-
-		//Photon Interactions
-		if (part.id() == 22 && incEnergy >= 2*m_e){ //Pair Production
-			//std::cout << "!Pair Prdoucing!" << std::endl;
-			crntGen.push_back(particleR2(incEnergy/2,0,11)); 
-			crntGen.push_back(particleR2(incEnergy/2,0,-11)); 
-			
-			//crntGen.erase(crntGen.begin());
-		}else if (incEnergy < 2*m_e){std::cout << "No Longer pair producing" << std::endl;}
-		
-		//Electron/Poistron Interactions
-		else if(abs(part.id()) == 11 && incEnergy >= E_Crit){ //Bremsstralung
-			//std::cout << "!Bremsstralunging!" << std::endl;
-			crntGen.push_back(particleR2(incEnergy/2,0,part.id()));  //This is only producing electrons or positrons >:(
-			crntGen.push_back(particleR2(incEnergy/2,0,22)); 
-
-			//crntGen.erase(crntGen.begin());
-		}else if (incEnergy < E_Crit){std::cout << "No Longer Bremsstralunging" << std::endl;}
-
-		else{
-			std::cout << "Input Not Recognized" << std::endl;
-		}
-
-		incCount++;
-	}
-
-	crntGen.erase(crntGen.begin(),crntGen.begin() + incCount); //This is not functioning correctly/how I expect it to
-
-	//std::cout << "There are " << incCount << " incident particles" << std::endl;
-}*/
-
 //Obtain Energy loss due to ionizaiton assuming MIP over a given range 
 double ionizationLoss(double E0, double startVal, double endVal){
 	double ELoss;
@@ -96,7 +36,7 @@ double ionizationLoss(double E0, double startVal, double endVal){
 
 	//Obatin the start and end points of the first and final layers
 	startLayer = layerTerminus(startVal);
-	endLyaer = layerTerminus(endVal);
+	endLayer = layerTerminus(endVal);
 
 	//Obatin the initial track loss 
 	ELoss = rho_pb*2*layerTrackLen_pb(startVal); //Energy loss in Lead
@@ -112,20 +52,12 @@ double ionizationLoss(double E0, double startVal, double endVal){
 	ELoss += rho_pb*2*layerTrackLen_pb(endVal,false);
 	ELoss += rho_scint*2*layerTrackLen_scint(endVal,false);
 
-	return E0 - ELoss;
-
-}
-
-//Obatin number of scintilation photons produced over a given length of detector
-double scintPhoton(double E0, double startPoint, double endPoint){
-	long photonCount = 0;
-
-	//In MIP Photon Yield = 16000/cm
+	return ELoss;
 
 }
 
 //Second version of the 1 dimeinsional showering function with hopefully less memory problems
-void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
+void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen){
 	int inCount = inShower.showerSize();
 	int showPart = 0; //Count the number of particles undergoing radiative processes and pair production
 	
@@ -169,11 +101,12 @@ void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
 			showPart+=1; //Increment number of incident showering particle
 			inShower.clearParticle(i);
 
-		}else if (incEnergy < E_Crit){ 
+		}else if (incEnergy < E_Crit){  //This may be removed
 			std::cout << "No longer Bremsstrahlunging" << std::endl;
 
 			//Simulate Ionization loss
-			
+			inShower.EVec.at(i) = inShower.EVec.at(i) - ionizationLoss(inShower.EVec.at(i),radLen2Long(crntRadLen),radLen2Long(crntRadLen));
+			inShower.pVec.at(i) = sqrt(pow(inShower.EVec.at(i),2) - pow(m_e,2));		
 		}
 
 		else{
@@ -182,6 +115,18 @@ void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
 		}
 	}
 }
+
+
+//Simulate ionization loss over a "continious" range
+
+//Obatin number of scintilation photons produced over a given length of detector
+/*double scintPhoton(double E0, double startPoint, double endPoint){
+	long photonCount = 0;
+
+	//In MIP Photon Yield = 16000/cm
+
+}*/
+
 
 
 //Determine the physical location of each interaction given 
@@ -212,7 +157,7 @@ int main(){
 
 	//Propogate over 25 Radiation Lengths
 	for (int t = 0; t < 25; t++){
-		showerAction1d(inShower,5, randGen);
+		showerAction1d(inShower,5, t);
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
 		//Check Lepton Number conversion
@@ -232,15 +177,3 @@ int main(){
 	//Memory managment 
 	delete randGen;
 }
-
-
-/*
-Bug List:
- 
-
-Other Stuff:
-Running over 24 layers and c++ is not happy a 2^24ish element vector makes c++ seg fault, I may need a better way to store the data on each shower (perhaps an LHE File??)
-Shower information needs to be stored in an external file or shower information should not be stored but rather useful information should be calucalted from information about the shower
-Need to deal with attenuation of particles otherwise c++ will segfault and die
-
-*/
