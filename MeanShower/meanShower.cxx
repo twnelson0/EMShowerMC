@@ -66,7 +66,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen){
 		double incEnergy = inShower.EVec.at(i);
 
 		//Photon Interactions
-		if (inShower.idVec.at(i) == 22 && incEnergy>= 2*m_e){ //Pair production
+		if (inShower.idVec.at(i) == 22 && incEnergy>= 2*m_e && ceil(crntRadLen) == floor(crntRadLen)){ //Pair production
 			//Electron
 			inShower.idVec.push_back(11);
 			inShower.EVec.push_back(incEnergy*0.5);
@@ -82,10 +82,10 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen){
 			showPart+=1; //Increment number of incident showering particles by 1
 			inShower.clearParticle(i);
 
-		}else if (incEnergy < 2*m_e){std::cout << "No longer pair producing" << std::endl;}
+		}else if (incEnergy < 2*m_e){continue; }//std::cout << "No longer pair producing" << std::endl;}
 
 		//Lepton Interactions
-		else if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit){ //Bremsstralung
+		else if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit && ceil(crntRadLen) == floor(crntRadLen)){ //Bremsstralung
 			//Lepton
 			inShower.idVec.push_back(inShower.idVec.at(i));
 			inShower.EVec.push_back(incEnergy*0.5);
@@ -110,8 +110,9 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen){
 		}
 
 		else{
-			std::cout << "Input Not Recognized" << std::endl;
-			inShower.printPart(i);
+			continue;
+			//std::cout << "Input Not Recognized" << std::endl;
+			//inShower.printPart(i);
 		}
 	}
 }
@@ -156,8 +157,8 @@ int main(){
 	int startLeptonNum = inShower.leptonNumber();
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 25; t++){
-		showerAction1d(inShower,5, t);
+	for (int t = 0; t < 4; t++){ //Loop over the generations
+		showerAction1d(inShower, 5, (double) (t + 1)/2);
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
 		//Check Lepton Number conversion
@@ -169,7 +170,7 @@ int main(){
 		}
 
 		//Check energy conservation 
-		//if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << Ecrt << " != " << E0 << std::endl;}
+		if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << Ecrt << " != " << E0 << std::endl;}
 	}
 
 
