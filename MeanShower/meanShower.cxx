@@ -92,23 +92,33 @@ int leptonNumber(std::vector<particleR2> shower){
 //Obtain Energy loss due to ionizaiton assuming MIP over a given range 
 double ionizationLoss(double E0, double startVal, double endVal){
 	double ELoss;
+	double *startLayer, *endLayer;
+
+	//Obatin the start and end points of the first and final layers
+	startLayer = layerTerminus(startVal);
+	endLyaer = layerTerminus(endVal);
 
 	//Obatin the initial track loss 
-	//Obatin the Initial Scintilating track length
-
-	//Obtain the Initial lead track length
+	ELoss = rho_pb*2*layerTrackLen_pb(startVal); //Energy loss in Lead
+	ELoss += rho_scint*2*layerTrackLen_scint(startVal); //Energy Loss due to Scintalting material
 
 	//Obtain the intervening tracks
+	for (int i = 0; i <  (int) (*(endLayer + 0) - *(startLayer + 1))/0.6; i++){
+		ELoss += rho_pb*2*0.2; //Lead
+		ELoss += rho_scint*2*0.4; //Scintilator
+	}
 
-	//Obtain the final lead track loss
+	//Obatin the final layer track energy loss
+	ELoss += rho_pb*2*layerTrackLen_pb(endVal,false);
+	ELoss += rho_scint*2*layerTrackLen_scint(endVal,false);
 
-	//Obtain the final Scintilating track loss
-
+	return E0 - ELoss;
 
 }
 
 //Obatin number of scintilation photons produced over a given length of detector
 double scintPhoton(double E0, double startPoint, double endPoint){
+	long photonCount = 0;
 
 	//In MIP Photon Yield = 16000/cm
 
@@ -122,20 +132,19 @@ void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
 	for (int i = 0; i < inCount; i++){
 		double partTheta,partP;
 		double incEnergy = inShower.EVec.at(i);
-		double splitFrac = gen->Uniform(1);
 
 		//Photon Interactions
 		if (inShower.idVec.at(i) == 22 && incEnergy>= 2*m_e){ //Pair production
 			//Electron
 			inShower.idVec.push_back(11);
-			inShower.EVec.push_back(incEnergy*splitFrac);
-			inShower.pVec.push_back(sqrt(pow(incEnergy*splitFrac,2) - pow(m_e,2)));
+			inShower.EVec.push_back(incEnergy*0.5);
+			inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
 			inShower.thetaVec.push_back(0);
 
 			//Positron
 			inShower.idVec.push_back(-11);
-			inShower.EVec.push_back(incEnergy*(1-splitFrac));
-			inShower.pVec.push_back(sqrt(pow(incEnergy*(1-splitFrac),2) - pow(m_e,2)));
+			inShower.EVec.push_back(incEnergy*0.5);
+			inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
 			inShower.thetaVec.push_back(0);
 
 			showPart+=1; //Increment number of incident showering particles by 1
@@ -147,14 +156,14 @@ void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
 		else if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit){ //Bremsstralung
 			//Lepton
 			inShower.idVec.push_back(inShower.idVec.at(i));
-			inShower.EVec.push_back(incEnergy*splitFrac);
-			inShower.pVec.push_back(sqrt(pow(incEnergy*splitFrac,2) - pow(m_e,2)));
+			inShower.EVec.push_back(incEnergy*0.5);
+			inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
 			inShower.thetaVec.push_back(0);
 
 			//Photon
 			inShower.idVec.push_back(22);
-			inShower.EVec.push_back(incEnergy*(1-splitFrac));
-			inShower.pVec.push_back(incEnergy*(1-splitFrac));
+			inShower.EVec.push_back(incEnergy*0.5);
+			inShower.pVec.push_back(incEnergy*0.5);
 			inShower.thetaVec.push_back(0);
 
 			showPart+=1; //Increment number of incident showering particle

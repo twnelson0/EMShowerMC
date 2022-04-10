@@ -3,7 +3,7 @@
 
 int main(){
 	std::cout << "Testing Geometry functions" << std::endl;
-	double testArr[5] = {3.575,1.168,16.1789,19.6566,0}; //Test points
+	double testArr[5] = {.3575,.1168,1.61789,1.96566,0}; //Test points
 
 	//As starting points for a given layer
 	for (int i = 0; i < 5; i++){
