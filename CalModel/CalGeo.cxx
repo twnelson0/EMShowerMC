@@ -2,6 +2,9 @@
 #include <iostream>
 #include <cmath>
 
+double radLen2Long(double t){return (396/25)*t;}
+
+double long2RadLen(double z){return (25/396)*z;}
 
 double* layerTerminus(double startPoint){
 	static double layerArr[2];

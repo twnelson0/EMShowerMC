@@ -1,6 +1,12 @@
 #ifndef CALGEO_H
 #define CALGEO_H
 
+//Convert Radiation length to Longitudnal Distance
+double radLen2Long(double t);
+
+//Convert longitudnal distance to Radiation Lengths
+double long2RadLen(double z);
+
 //Determine start and end point of a given layer
 double *layerTerminus(double startPoint);
 

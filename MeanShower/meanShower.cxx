@@ -6,6 +6,7 @@
 #include "TRandom3.h" //*NO Idea if I'm going to use ROOT libaries*
 #include "../MathMethods/MatterCalc.h"
 #include "../MathMethods/particles.h"
+#include "../CalModel/CalGeo.h"
 
 using namespace physConstants; //Physical constants from MatterCalc.h
 
@@ -51,7 +52,7 @@ int leptonNumber(std::vector<particleR2> shower){
 }
 
 //Paticle interaction in 1d WILL CAUSE SEG FAULTS!! (Deperacted)
-void showerAction1d_Dep(std::vector<particleR2>& crntGen, double E_Crit){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
+/*void showerAction1d_Dep(std::vector<particleR2>& crntGen, double E_Crit){ //For a realastic shower of 24 particles this vector will contain 2^24 elements, this does not make c++ happy
 	uint incCount = 0;
 
 	//Loop over all incident particles in the shower
@@ -86,8 +87,32 @@ void showerAction1d_Dep(std::vector<particleR2>& crntGen, double E_Crit){ //For 
 	crntGen.erase(crntGen.begin(),crntGen.begin() + incCount); //This is not functioning correctly/how I expect it to
 
 	//std::cout << "There are " << incCount << " incident particles" << std::endl;
+}*/
+
+//Obtain Energy loss due to ionizaiton assuming MIP over a given range 
+double ionizationLoss(double E0, double startVal, double endVal){
+	double ELoss;
+
+	//Obatin the initial track loss 
+	//Obatin the Initial Scintilating track length
+
+	//Obtain the Initial lead track length
+
+	//Obtain the intervening tracks
+
+	//Obtain the final lead track loss
+
+	//Obtain the final Scintilating track loss
+
+
 }
 
+//Obatin number of scintilation photons produced over a given length of detector
+double scintPhoton(double E0, double startPoint, double endPoint){
+
+	//In MIP Photon Yield = 16000/cm
+
+}
 
 //Second version of the 1 dimeinsional showering function with hopefully less memory problems
 void showerAction1d(showerR2 &inShower, double E_Crit, TRandom3 *gen){
