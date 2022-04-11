@@ -108,7 +108,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, double
 			inShower.clearParticle(i);
 
 		}else if (incEnergy < E_Crit){  //This may be removed
-			std::cout << "No longer Bremsstrahlunging" << std::endl;
+			//std::cout << "No longer Bremsstrahlunging" << std::endl;
 
 			//Simulate Ionization loss
 			inShower.EVec.at(i) = inShower.EVec.at(i) - ionizationLoss(inShower.EVec.at(i),radLen2Long(crntRadLen),radLen2Long(crntRadLen + dt));
@@ -126,13 +126,8 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, double
 
 //Simulate ionization loss over a "continious" range
 
-//Obatin number of scintilation photons produced over a given length of detector
-/*double scintPhoton(double E0, double startPoint, double endPoint){
-	long photonCount = 0;
-
-	//In MIP Photon Yield = 16000/cm
-
-}*/
+//Obatin number of scintilation photons produced over a given length of detector (assume inputs are in units of track length)
+double scintPhoton(double E0, double startPoint, double endPoint){return 2*layerTrackLen_scint();}
 
 
 
@@ -156,7 +151,14 @@ int main(){
 	particleR2 initPart = particleR2(E0,0,11);
 	showerR2 inShower = showerR2(initPart);
 	TRandom3 *randGen = new TRandom3();
-	int Nitr = 5;
+	int Nitr = 500;
+	TCanvas *c1 = new TCanvas("c1","c1",500,500);
+	int photoArr[26];
+	int genArr[26];
+	
+	//Scintilation photon Histogram
+	
+
 	//std::vector<particleR2> showerVec;
 	//showerVec.push_back(initPart);
 
@@ -165,29 +167,65 @@ int main(){
 	double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 2; t++){ //Loop over the generations
+	for (int t = 0; t < 25; t++){ //Loop over the generations
 		std::cout << "Generation " << t << std::endl;
+
+		//Count the number of charged tracks at the begining of each generation
+		int chargedTrackNum = inShower.chargedTracks();
+		long nGamma; //Number of Scintilation photons
+
 		for (int i = 0; i < Nitr; i++){ //Simulate behavior between "generations"
 			showerAction1d(inShower, 5, (double) t + i*dt, dt);
-			std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
+			//std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
 			//Check Lepton Number conversion
 			if (startLeptonNum != inShower.leptonNumber()) std::cout << "Lepton Number Not Being Conserved" << std::endl;
-			double Ecrt = 0;
+			//double Ecrt = 0;
 
-			for (int i = 0; i < inShower.showerSize(); i++){
+			/*for (int i = 0; i < inShower.showerSize(); i++){
 				Ecrt += inShower.EVec.at(i);
 			}
 
 			//Check energy conservation 
-			if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << Ecrt << " != " << E0 << std::endl;}
+			if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << Ecrt << " != " << E0 << std::endl;}*/
 		} 
+
+		//nGamma = (long) layerTrackLen_scint(radLen2Long((double)t),radLen2Long((double)(t + 1)))*chargedTrackNum*8000; //This is causing integer overflows these numbers are too big
+		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;
 	}
 
 	/*
 		Could treat Bremstrahlung as a discrete process that occurs at the start or end of every loop iteration, and do continous simulations of the middle steps
 	*/
 
+	//c1->SaveAs("TestCanvas.pdf");
+
 	//Memory managment 
 	delete randGen;
+	delete c1;
 }
+
+/*
+I will wan to count the scintilation photons either during the continous loop or 
+after each generation, taking into account the number of photons in each layer
+
+If I use the first option I can write a function that take a given range and determines 
+which scintiltaor it falls within (perhaps cutting out any part that isn't in a scintilator)
+
+Still not sure what the best solution is as if I choose the first I have to wory about a range 
+enetering into the adjacent lead layer, it almost seems like I need to include a function that cuts
+off any part of the track length not contained in the scintlator before getting N-gamma
+
+Scheme:
+Input(start,end): function gets intial or final scintilation layer, not valid if |start - end| > 6 mm
+From there can determine which scintilation layer I'm in
+
+Want another function that can trim any part of a length outside the scintilator in similar to 
+the layerTrackLen_scint function
+
+from there I can map a number of photons produced within a given length of scintilator to a specific layer and store it
+This should also allow me to deal with generation lines that fall within a scintilator
+
+
+*/
+

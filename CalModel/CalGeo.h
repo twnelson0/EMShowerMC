@@ -1,6 +1,8 @@
 #ifndef CALGEO_H
 #define CALGEO_H
 
+//All units are implied to be longitudnal distance expcet for radLen2Long or otherwise specified
+
 //Convert Radiation length to Longitudnal Distance
 double radLen2Long(double t);
 
@@ -21,5 +23,8 @@ double layerTrackLen_pb(double edgeVal, bool start = true);
 
 //For a showering start and end point determine the Lead track length of material
 double trackLen_pb(double startPoint, double endPoint);
+
+//Determine which scintilating layer a small length is contained within (input in rad len)
+//int scintNumber(double startVal, double endVal);
 
 #endif
