@@ -1,6 +1,9 @@
 #ifndef CALGEO_H
 #define CALGEO_H
 
+//Indicator Function
+int ind(double x, double lowBound, double upBound);
+
 //All units are implied to be longitudnal distance expcet for radLen2Long or otherwise specified
 
 //Convert Radiation length to Longitudnal Distance
