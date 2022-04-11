@@ -88,7 +88,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, double
 			showPart+=1; //Increment number of incident showering particles by 1
 			inShower.clearParticle(i);
 
-		}else if (incEnergy < 2*m_e){continue;}//std::cout << "No longer pair producing" << std::endl;}
+		}else if (inShower.idVec.at(i) == 22 && incEnergy < 2*m_e){continue;}//std::cout << "No longer pair producing" << std::endl;}
 
 		//Lepton Interactions
 		else if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit && ceil(crntRadLen + dt) == floor(crntRadLen + dt)){ //Bremsstralung
@@ -107,8 +107,9 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, double
 			showPart+=1; //Increment number of incident showering particle
 			inShower.clearParticle(i);
 
-		}else if (incEnergy < E_Crit){  //This may be removed
+		}else if (abs(inShower.idVec.at(i)) == 11 && incEnergy < E_Crit){  //This may be removed
 			//std::cout << "No longer Bremsstrahlunging" << std::endl;
+			//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
 
 			//Simulate Ionization loss
 			inShower.EVec.at(i) = inShower.EVec.at(i) - ionizationLoss(inShower.EVec.at(i),radLen2Long(crntRadLen),radLen2Long(crntRadLen + dt));
@@ -127,7 +128,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, double
 //Simulate ionization loss over a "continious" range
 
 //Obatin number of scintilation photons produced over a given length of detector (assume inputs are in units of track length)
-double scintPhoton(double E0, double startPoint, double endPoint){return 2*layerTrackLen_scint();}
+//double scintPhoton(double E0, double startPoint, double endPoint){return 2*layerTrackLen_scint();}
 
 
 

@@ -11,26 +11,30 @@ double radLen2Long(double t){return (39.6/25)*t;}
 
 double long2RadLen(double z){return (25/39.6)*z;}
 
-int crntLayer(double crntPoint){return (int) (floor(10*crntPoint) - (int) floor(10*crntPoint) % 4)/6;}
+int crntLayer(double crntPoint){return (int) (floor(10*crntPoint) - (int) floor(10*crntPoint) % 6)/6;}
 
 double* layerTerminus(double startPoint){
-	static double layerArr[2];
-	double startFloor, layerStart, layerEnd;
-	int layerMod;
+	double *layerArr = new double[2];
+	//double startFloor, layerStart, layerEnd;
+	int layerNum = crntLayer(startPoint);
+	//int layerMod;
 
 	//Determine end points of layer
-	startFloor = std::floor(startPoint*10); //Get floor of start point
-	layerMod = (int) startFloor % 6; //Get modulus 6 of start point (roughly)
+	/*startFloor = floor(startPoint*10); //Get floor of start point
+	layerMod = ((int) startFloor) % 6; //Get modulus 6 of start point (roughly)
 
 	layerArr[0] = (startFloor - (double) layerMod)/10; //Get start point of layer
-	layerArr[1] = (startFloor + (double) (6 - layerMod))/10; //Get end point of layer
+	layerArr[1] = (startFloor + (double) (6 - layerMod))/10; //Get end point of layer*/
+	*layerArr = 0.6*layerNum;
+	*(layerArr + 1) = 0.6*(layerNum + 1);
 
 	return layerArr;
 }
 
 double layerTrackLen_scint(double edgeVal, bool start){
 	double trackLen;
-	double *layerEnds = layerTerminus(edgeVal); //Get the start and end points of the layer
+	double *layerEnds = new double[2];
+	layerEnds = layerTerminus(edgeVal); //Get the start and end points of the layer
 
 	//Determine material of current layer (and hence track length)
 	if (start){ //If input value is the start point
@@ -44,21 +48,31 @@ double layerTrackLen_scint(double edgeVal, bool start){
 		else trackLen = edgeVal - *(layerEnds) - 0.2; //How much scintilator the particle will propogate through
 	}
 	
+	delete[] layerEnds;
 	return trackLen;	
 }
 
 double trackLen_scint(double startPoint, double endPoint){
-	double *startLayer = layerTerminus(startPoint); //Get first Layer information
-	double *endLayer = layerTerminus(endPoint); //Get Ending Layer information
+	double *startLayer = new double[2];
+	double *endLayer = new double[2];
+	startLayer = layerTerminus(startPoint); //Get first Layer information
+	endLayer = layerTerminus(endPoint); //Get Ending Layer information
 	double trackLen = 0;
 
 	//Transversal through part of a single layer
 	if (endPoint < *(startLayer + 1)){
 		double effStart, effEnd; //Start and end points w.r.t to single layer
-		effStart = (startPoint - (floor(startPoint) - *(startLayer)))*10;
-		effEnd = (endPoint - (floor(endPoint) - *(startLayer)))*10;
+		effStart = (startPoint - *(startLayer))*10;
+		std::cout << effStart << std::endl;
+		effEnd = (endPoint - *(startLayer))*10;
+		std::cout << effEnd << std::endl;
 		//Determine how much track is in the scintilator
-		trackLen += ((6 - effEnd*ind(effEnd,2,6)) - (effStart*ind(effStart,2,effEnd) - 2))*0.1;
+		//trackLen += ((6 - effEnd*ind(effEnd,2,6)) - (effStart*ind(effStart,2,effEnd) - 2))*0.1;
+		if (effStart < 2 && effEnd <= 2) trackLen+=0;
+		if (effStart < 2 && effEnd > 2 && effEnd < 6) trackLen+=(effEnd - 2)*0.1;
+		if (effStart > 2 && effEnd == 6) trackLen+=0.4;
+		if (effStart >= 2 && effEnd > 2 && effEnd <= 6) trackLen += (effEnd - effStart)*0.1;
+		//trackLen += (effEnd*ind(effEnd,2,6) - effStart*ind(effStart,2,effEnd))*0.1;
 
 	}else{ //Transveral through 1 or more layers
 		//Get track length through first layer (likely not the full layer)
@@ -72,12 +86,16 @@ double trackLen_scint(double startPoint, double endPoint){
 
 	}
 
+	delete[] startLayer;
+	delete[] endLayer;
+
 	return trackLen;
 }
 
 double layerTrackLen_pb(double edgeVal, bool start){
 	double trackLen;
-	double *layerEnds = layerTerminus(edgeVal); //Get the start and end points of the layer
+	double *layerEnds = new double[2];
+	layerEnds = layerTerminus(edgeVal); //Get the start and end points of the layer
 
 	//Determine material of current layer (and hence track length)
 	if (start){ //If input value is the start point
@@ -91,13 +109,16 @@ double layerTrackLen_pb(double edgeVal, bool start){
 		else trackLen = 0.2; //Particle in Scintilator
 	}
 	
-	
+	delete[] layerEnds;
+
 	return trackLen;	
 }
 
 double trackLen_pb(double startPoint, double endPoint){
-	double *startLayer = layerTerminus(startPoint); //Get first Layer information
-	double *endLayer = layerTerminus(endPoint); //Get Ending Layer information
+	double *startLayer = new double[2];
+	double *endLayer = new double[2];
+	startLayer = layerTerminus(startPoint); //Get first Layer information
+	endLayer = layerTerminus(endPoint); //Get Ending Layer information
 	double trackLen;
 
 	//Get track length through first layer (likely not the full layer)
@@ -108,6 +129,9 @@ double trackLen_pb(double startPoint, double endPoint){
 
 	//Get track length through final layer (likely not the full layer)
 	trackLen += layerTrackLen_pb(endPoint, false);
+
+	delete [] startLayer;
+	delete [] endLayer;
 
 	return trackLen;
 }
