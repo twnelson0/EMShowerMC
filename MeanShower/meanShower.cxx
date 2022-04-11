@@ -11,7 +11,7 @@
 
 //EM Shower Libaries
 #include "../MathMethods/MatterCalc.h"
-#include "../MathMethods/particles.h"
+#include "../MathMethods/particles.h" //Shower object
 #include "../CalModel/CalGeo.h"
 
 using namespace physConstants; //Physical constants from MatterCalc.h

@@ -12,6 +12,9 @@ double radLen2Long(double t);
 //Convert longitudnal distance to Radiation Lengths
 double long2RadLen(double z);
 
+//Obtain layer a given point is located within
+int crntLayer(double crntPoint);
+
 //Determine start and end point of a given layer
 double *layerTerminus(double startPoint);
 

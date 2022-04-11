@@ -11,6 +11,8 @@ double radLen2Long(double t){return (39.6/25)*t;}
 
 double long2RadLen(double z){return (25/39.6)*z;}
 
+int crntLayer(double crntPoint){return (int) (floor(10*crntPoint) - (int) floor(10*crntPoint) % 4)/6;}
+
 double* layerTerminus(double startPoint){
 	static double layerArr[2];
 	double startFloor, layerStart, layerEnd;
@@ -39,7 +41,7 @@ double layerTrackLen_scint(double edgeVal, bool start){
 	//If input value is the end
 	if (!start){ 
 		if (edgeVal >= *(layerEnds) && edgeVal <= *(layerEnds) + 0.2) trackLen = 0.0; //Particle in lead
-		else trackLen = *(layerEnds + 0) + edgeVal; //How much scintilator the particle will propogate through
+		else trackLen = edgeVal - *(layerEnds) - 0.2; //How much scintilator the particle will propogate through
 	}
 	
 	return trackLen;	
@@ -56,7 +58,7 @@ double trackLen_scint(double startPoint, double endPoint){
 		effStart = (startPoint - (floor(startPoint) - *(startLayer)))*10;
 		effEnd = (endPoint - (floor(endPoint) - *(startLayer)))*10;
 		//Determine how much track is in the scintilator
-		trackLen += (4 - (6 - effEnd*ind(effEnd,2,6)) - (effStart*ind(effStart,2,effEnd) - 2))*0.1;
+		trackLen += ((6 - effEnd*ind(effEnd,2,6)) - (effStart*ind(effStart,2,effEnd) - 2))*0.1;
 
 	}else{ //Transveral through 1 or more layers
 		//Get track length through first layer (likely not the full layer)
