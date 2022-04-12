@@ -154,11 +154,12 @@ int main(){
 	TRandom3 *randGen = new TRandom3();
 	int Nitr = 500;
 	TCanvas *c1 = new TCanvas("c1","c1",500,500);
-	int photoArr[25];
-	int genArr[25];
+	int photoArr[66];
+	int layerArr[66];
+	double eLossArr[25];
 
 	//Set up photon array
-	for (int i = 0; i < 25; i++){photoArr[i] = 0;}
+	for (int i = 0; i < 66; i++){photoArr[i] = 0; layerArr[i] = i;}
 	
 	//Scintilation photon Histogram
 	
@@ -171,7 +172,7 @@ int main(){
 	double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 1; t++){ //Loop over the generations
+	for (int t = 0; t < 25; t++){ //Loop over the generations
 		std::cout << "Generation " << t << std::endl;
 
 		//Count the number of charged tracks at the begining of each generation
@@ -188,12 +189,12 @@ int main(){
 
 			//Scinitlation photons !!THIS IS CAUSING UNDEFINED BEHAVIOR!!
 			//std::cout << crntLayer(radLen2Long(t + i*dt)) << std::endl;
-			std::cout << "Layer = " << crntLayer(t + i*dt) << std::endl;
-			currentLayerMat(t + i*dt);
-			currentLayerMat(t + (i+1)*dt);
-			std::cout << "Layer = " << crntLayer(t + (i + 1)*dt) << std::endl;
+			//std::cout << "Layer = " << crntLayer(t + i*dt) << std::endl;
+			//currentLayerMat(t + i*dt);
+			//currentLayerMat(t + (i+1)*dt);
+			//std::cout << "Layer = " << crntLayer(t + (i + 1)*dt) << std::endl;
 			photoArr[crntLayer(radLen2Long(t + i*dt))] += 16000*nChargeTrack*trackLen_scint(t + i*dt,t + (i+1)*dt);
-			std::cout << photoArr[crntLayer(radLen2Long(t + i*dt))]  << std::endl;
+			//std::cout << photoArr[crntLayer(radLen2Long(t + i*dt))]  << std::endl;
 			//double Ecrt = 0;
 
 
@@ -211,14 +212,19 @@ int main(){
 		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;
 	}
 
+	//Try to make a graph of the scintilaiton photons
+	TGraph *g1 = new TGraph(66,layerArr,photoArr);
+	g1->Draw();
+
 	/*
 		Could treat Bremstrahlung as a discrete process that occurs at the start or end of every loop iteration, and do continous simulations of the middle steps
 	*/
 
-	//c1->SaveAs("TestCanvas.pdf");
+	c1->SaveAs("TestCanvas.pdf");
 
 	//Memory managment 
 	delete randGen;
+	delete g1;
 	delete c1;
 }
 
@@ -246,3 +252,15 @@ This should also allow me to deal with generation lines that fall within a scint
 
 */
 
+
+/*
+I don't understand how to get energy deposited from this simple simulation, I get that the fractional energy deposited will increase but early on since I am halving the particles isn't 
+no energy going to be deposited until the charged tracks start scintillating?
+I am also a bit confused about when scintilation starts
+
+CUrrently confused on the followng:
+*How to simulate scintilation photons
+*How to get energy depoosited per distance traveled (the two should be related)
+*Do I need to consider energy loss that beyond mean bremstrahulng when simulating early part of the shower
+*Attenuation of the shower towards the end No idea where to even start with this
+*/
