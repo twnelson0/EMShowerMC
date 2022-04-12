@@ -7,6 +7,11 @@ int ind(double x, double lowBound, double upBound){
 	else return 0;
 }
 
+int indSoftUppr(double x, double lowBound, double upBound){
+	if(x >= lowBound && x < upBound) return 1;
+	else return 0;
+}
+
 double radLen2Long(double t){return (39.6/25)*t;}
 
 double long2RadLen(double z){return (25/39.6)*z;}
@@ -63,16 +68,16 @@ double trackLen_scint(double startPoint, double endPoint){
 	if (endPoint < *(startLayer + 1)){
 		double effStart, effEnd; //Start and end points w.r.t to single layer
 		effStart = (startPoint - *(startLayer))*10;
-		std::cout << effStart << std::endl;
 		effEnd = (endPoint - *(startLayer))*10;
-		std::cout << effEnd << std::endl;
+		
 		//Determine how much track is in the scintilator
-		//trackLen += ((6 - effEnd*ind(effEnd,2,6)) - (effStart*ind(effStart,2,effEnd) - 2))*0.1;
-		if (effStart < 2 && effEnd <= 2) trackLen+=0;
-		if (effStart < 2 && effEnd > 2 && effEnd < 6) trackLen+=(effEnd - 2)*0.1;
-		if (effStart > 2 && effEnd == 6) trackLen+=0.4;
-		if (effStart >= 2 && effEnd > 2 && effEnd <= 6) trackLen += (effEnd - effStart)*0.1;
-		//trackLen += (effEnd*ind(effEnd,2,6) - effStart*ind(effStart,2,effEnd))*0.1;
+		trackLen += (effEnd - (effStart*ind(effStart,2,6) + 2*indSoftUppr(effStart,0,2)))*ind(effEnd,2,6);//(effEnd*ind(effEnd,2,6) - effStart*ind(effStart,2,effEnd))*0.1;
+
+		if (trackLen < 0) {
+			std::cout << "!!Track Length is Negative" << std::endl;
+			std::cout << effStart << "\n" << effEnd << std::endl;
+
+		}
 
 	}else{ //Transveral through 1 or more layers
 		//Get track length through first layer (likely not the full layer)
@@ -134,4 +139,13 @@ double trackLen_pb(double startPoint, double endPoint){
 	delete [] endLayer;
 
 	return trackLen;
+}
+
+
+void currentLayerMat(double crntPoint){
+	int effCrntVal = (int) floor(crntPoint*10);
+
+	if (effCrntVal >= 0 && effCrntVal <= 2) std::cout << "Lead" << std::endl;
+	else std::cout << "Scintilator" << std::endl;
+
 }

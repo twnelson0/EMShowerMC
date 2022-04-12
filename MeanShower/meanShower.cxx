@@ -154,8 +154,11 @@ int main(){
 	TRandom3 *randGen = new TRandom3();
 	int Nitr = 500;
 	TCanvas *c1 = new TCanvas("c1","c1",500,500);
-	int photoArr[26];
-	int genArr[26];
+	int photoArr[25];
+	int genArr[25];
+
+	//Set up photon array
+	for (int i = 0; i < 25; i++){photoArr[i] = 0;}
 	
 	//Scintilation photon Histogram
 	
@@ -168,12 +171,12 @@ int main(){
 	double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 25; t++){ //Loop over the generations
+	for (int t = 0; t < 1; t++){ //Loop over the generations
 		std::cout << "Generation " << t << std::endl;
 
 		//Count the number of charged tracks at the begining of each generation
-		int chargedTrackNum = inShower.chargedTracks();
-		long nGamma; //Number of Scintilation photons
+		int nChargeTrack = inShower.chargedTracks();
+		//long nGamma = 0; //Number of Scintilation photons
 
 		for (int i = 0; i < Nitr; i++){ //Simulate behavior between "generations"
 			showerAction1d(inShower, 5, (double) t + i*dt, dt);
@@ -181,7 +184,18 @@ int main(){
 
 			//Check Lepton Number conversion
 			if (startLeptonNum != inShower.leptonNumber()) std::cout << "Lepton Number Not Being Conserved" << std::endl;
+			
+
+			//Scinitlation photons !!THIS IS CAUSING UNDEFINED BEHAVIOR!!
+			//std::cout << crntLayer(radLen2Long(t + i*dt)) << std::endl;
+			std::cout << "Layer = " << crntLayer(t + i*dt) << std::endl;
+			currentLayerMat(t + i*dt);
+			currentLayerMat(t + (i+1)*dt);
+			std::cout << "Layer = " << crntLayer(t + (i + 1)*dt) << std::endl;
+			photoArr[crntLayer(radLen2Long(t + i*dt))] += 16000*nChargeTrack*trackLen_scint(t + i*dt,t + (i+1)*dt);
+			std::cout << photoArr[crntLayer(radLen2Long(t + i*dt))]  << std::endl;
 			//double Ecrt = 0;
+
 
 			/*for (int i = 0; i < inShower.showerSize(); i++){
 				Ecrt += inShower.EVec.at(i);
@@ -190,6 +204,8 @@ int main(){
 			//Check energy conservation 
 			if (Ecrt != E0){std::cout << "!Energy is Not being conserved!" << Ecrt << " != " << E0 << std::endl;}*/
 		} 
+
+		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 
 		//nGamma = (long) layerTrackLen_scint(radLen2Long((double)t),radLen2Long((double)(t + 1)))*chargedTrackNum*8000; //This is causing integer overflows these numbers are too big
 		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;

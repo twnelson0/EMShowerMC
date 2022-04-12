@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo Removing .o and .out files
+
 if [[ -e MeanTest.out ]];then
 	rm MeanTest.out
 fi

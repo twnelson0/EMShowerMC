@@ -4,8 +4,8 @@
 int main(){
 	std::cout << "Testing Geometry functions" << std::endl;
 	double testArr[5] = {.3575,.1168,1.61789,1.96566,0}; //Test points
-	double *layer = new double[2];
-	layer = layerTerminus(0.4);
+	//double *layer = new double[2];
+	//layer = layerTerminus(0.4);
 	//double *bullshit = layerTerminus(0.4);
 	//double testArr[5] = {.2,.5,1.2,.1,0};
 
@@ -25,12 +25,12 @@ int main(){
 		std::cout << "Lead Length = " << layerTrackLen_pb(testArr[i],false) << std::endl;
 	}*/
 
-	std::cout << trackLen_scint(0.3,0.4) << std::endl;
+	std::cout << trackLen_scint(1/500,2/500) << std::endl;
 	std::cout << trackLen_scint(0.1,0.4) << std::endl;
 	std::cout << trackLen_scint(0.1,0.15) << std::endl;
 	std::cout << trackLen_scint(0.4,0.6) << std::endl;
 	//std::cout << crntLayer(0.4) << std::endl;
-	std::cout << *layer << " and " << *(layer + 1) << std::endl;
+	//std::cout << *layer << " and " << *(layer + 1) << std::endl;
 
-	delete[] layer;
+	//delete[] layer;
 }
