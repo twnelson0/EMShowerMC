@@ -74,54 +74,61 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 		std::vector<int> eraseVec;
 
 		//Photon Interactions
-		if (inShower.idVec.at(i) == 22 && incEnergy>= 2*m_e && ceil(crntRadLen) == floor(crntRadLen)){ //Pair production
-			if (verbose) std::cout << "Pair production" << std::endl;
+		if(inShower.idVec.at(i) == 22){
+			if (incEnergy>= 2*m_e && ceil(crntRadLen) == floor(crntRadLen)){ //Pair production
+				if (verbose) std::cout << "Pair production" << std::endl;
 
-			//Electron
-			inShower.idVec.push_back(11);
-			inShower.EVec.push_back(incEnergy*0.5);
-			inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
-			inShower.thetaVec.push_back(0);
+				//Electron
+				inShower.idVec.push_back(11);
+				inShower.EVec.push_back(incEnergy*0.5);
+				inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
+				inShower.thetaVec.push_back(0);
 
-			//Positron
-			inShower.idVec.push_back(-11);
-			inShower.EVec.push_back(incEnergy*0.5);
-			inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
-			inShower.thetaVec.push_back(0);
+				//Positron
+				inShower.idVec.push_back(-11);
+				inShower.EVec.push_back(incEnergy*0.5);
+				inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
+				inShower.thetaVec.push_back(0);
 
-			showPart+=1; //Increment number of incident showering particles by 1
-			eraseVec.push_back(i);
-			//inShower.clearParticle(i); //!!MODIFIED THIS LOGIC!!
+				showPart+=1; //Increment number of incident showering particles by 1
+				eraseVec.push_back(i);
+				//inShower.clearParticle(0); //!!MODIFIED THIS LOGIC!!
 
-		}else if (inShower.idVec.at(i) == 22 && incEnergy < 2*m_e){continue;}//std::cout << "No longer pair producing" << std::endl;}
+			}else if (incEnergy < 2*m_e){ if (verbose) std::cout << "No longer pair producing" << std::endl;}
+		}
 
 		//Lepton Interactions
-		if (abs(inShower.idVec.at(i)) == 11 && incEnergy >= E_Crit && ceil(crntRadLen) == floor(crntRadLen)){ //Bremsstralung
-			if (verbose) std::cout << "Lepton Interaction" << std::endl;
-			//Lepton
-			inShower.idVec.push_back(inShower.idVec.at(i));
-			inShower.EVec.push_back(incEnergy*0.5);
-			inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
-			inShower.thetaVec.push_back(0);
+		else if (inShower.idVec.at(i) == 11 || inShower.idVec.at(i) == -11){
+			if (incEnergy >= E_Crit && ceil(crntRadLen) == floor(crntRadLen)){ //Bremsstralung
+				if (verbose) std::cout << "Lepton Interaction" << std::endl;
+				//Lepton
+				inShower.idVec.push_back(inShower.idVec.at(i));
+				inShower.EVec.push_back(incEnergy*0.5);
+				inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
+				inShower.thetaVec.push_back(0);
 
-			//Photon
-			inShower.idVec.push_back(22);
-			inShower.EVec.push_back(incEnergy*0.5);
-			inShower.pVec.push_back(incEnergy*0.5);
-			inShower.thetaVec.push_back(i);
+				//Photon
+				inShower.idVec.push_back(22);
+				inShower.EVec.push_back(incEnergy*0.5);
+				inShower.pVec.push_back(incEnergy*0.5);
+				inShower.thetaVec.push_back(i);
 
-			showPart+=1; //Increment number of incident showering particle
-			eraseVec.push_back(i);
-			//inShower.clearParticle(i);
+				showPart+=1; //Increment number of incident showering particle
+				eraseVec.push_back(i);
+				//inShower.clearParticle(0);
 
-		}else if (abs(inShower.idVec.at(i)) == 11 && incEnergy < E_Crit){  //This may be removed
-			continue;
-			if (verbose) std::cout << "No longer Bremsstrahlunging" << std::endl;
-			//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
+			}else if (incEnergy < E_Crit){  //This may be removed
+				if (verbose) {
+					std::cout << "No longer Bremsstrahlunging" << std::endl;
+					inShower.printPart(i);
+				}
+				continue;
+				//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
 
-			//Simulate Ionization loss
-			//inShower.EVec.at(i) = inShower.EVec.at(i) - ionizationLoss(inShower.EVec.at(i),radLen2Long(crntRadLen),radLen2Long(crntRadLen + dt));
-			//inShower.pVec.at(i) = sqrt(pow(inShower.EVec.at(i),2) - pow(m_e,2));		
+				//Simulate Ionization loss
+				//inShower.EVec.at(i) = inShower.EVec.at(i) - ionizationLoss(inShower.EVec.at(i),radLen2Long(crntRadLen),radLen2Long(crntRadLen + dt));
+				//inShower.pVec.at(i) = sqrt(pow(inShower.EVec.at(i),2) - pow(m_e,2));		
+			}
 		}
 
 		else{
@@ -132,9 +139,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 
 
 		//Clear out previous generation of particles
-		for (int i = 0; i < eraseVec.size(); i++){
-			inShower.clearParticle(eraseVec.at(i));
-		}
+		for (int i = 0; i < eraseVec.size(); i++){inShower.clearParticle(eraseVec.at(i));}
 	}
 }
 
@@ -162,8 +167,8 @@ std::vector<double> getIntrPoints(int NX0, double size){
 int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
-	double E0 = 500e3;
-	particleR2 initPart = particleR2(E0,0,11);
+	double E0 = 500e3; //Starting energy in MeV
+	particleR2 initPart = particleR2(E0,0,22);
 	showerR2 inShower = showerR2(initPart);
 	TRandom3 *randGen = new TRandom3();
 	int Nitr = 500;
@@ -197,8 +202,10 @@ int main(){
 		//Count the number of charged tracks at the begining of each generation
 		int nChargeTrack = inShower.chargedTracks();
 		//leptonNumber[t] = nChargeTrack;
-		if (t == 1) showerAction1d(inShower, 5, (double) t, true);
-		else showerAction1d(inShower, 5, (double) t, false);
+		//inShower.showerDump();
+		if (t == 9) showerAction1d(inShower, 5, (double) t, true);
+		else showerAction1d(inShower, 5, (double) t);
+		if (startLeptonNum != inShower.leptonNumber()) std::cout << "Lepton Number Not Being Conserved" << std::endl;
 
 		//long nGamma = 0; //Number of Scintilation photons
 
@@ -229,7 +236,8 @@ int main(){
 		}*/ 
 
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
-		std::cout << "There are " << nChargeTrack << " charged tracks" << std::endl;
+		std::cout << "There where " << nChargeTrack << " charged tracks at the start" << std::endl;
+		//if (t == 0) inShower.showerDump();
 		//nGamma = (long) layerTrackLen_scint(radLen2Long((double)t),radLen2Long((double)(t + 1)))*chargedTrackNum*8000; //This is causing integer overflows these numbers are too big
 		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;
 	}
