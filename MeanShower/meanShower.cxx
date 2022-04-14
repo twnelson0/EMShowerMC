@@ -108,18 +108,19 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, double
 			inShower.clearParticle(i);
 
 		}else if (abs(inShower.idVec.at(i)) == 11 && incEnergy < E_Crit){  //This may be removed
+			continue;
 			//std::cout << "No longer Bremsstrahlunging" << std::endl;
 			//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
 
 			//Simulate Ionization loss
-			inShower.EVec.at(i) = inShower.EVec.at(i) - ionizationLoss(inShower.EVec.at(i),radLen2Long(crntRadLen),radLen2Long(crntRadLen + dt));
-			inShower.pVec.at(i) = sqrt(pow(inShower.EVec.at(i),2) - pow(m_e,2));		
+			//inShower.EVec.at(i) = inShower.EVec.at(i) - ionizationLoss(inShower.EVec.at(i),radLen2Long(crntRadLen),radLen2Long(crntRadLen + dt));
+			//inShower.pVec.at(i) = sqrt(pow(inShower.EVec.at(i),2) - pow(m_e,2));		
 		}
 
 		else{
-			continue;
-			//std::cout << "Input Not Recognized" << std::endl;
-			//inShower.printPart(i);
+			//continue;
+			std::cout << "Input Not Recognized" << std::endl;
+			inShower.printPart(i);
 		}
 	}
 }
@@ -158,6 +159,10 @@ int main(){
 	int layerArr[66];
 	double eLossArr[25];
 
+	//Debugging number of leptons
+	/*int leptonNumber[11];
+	int genArray[11];*/
+
 	//Set up photon array
 	for (int i = 0; i < 66; i++){photoArr[i] = 0; layerArr[i] = i;}
 	
@@ -172,11 +177,14 @@ int main(){
 	double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 25; t++){ //Loop over the generations
+	for (int t = 0; t < 2; t++){ //Loop over the generations
 		std::cout << "Generation " << t << std::endl;
+		//genArray[t] = t;
 
 		//Count the number of charged tracks at the begining of each generation
 		int nChargeTrack = inShower.chargedTracks();
+		//leptonNumber[t] = nChargeTrack;
+
 		//long nGamma = 0; //Number of Scintilation photons
 
 		for (int i = 0; i < Nitr; i++){ //Simulate behavior between "generations"
@@ -193,7 +201,7 @@ int main(){
 			//currentLayerMat(t + i*dt);
 			//currentLayerMat(t + (i+1)*dt);
 			//std::cout << "Layer = " << crntLayer(t + (i + 1)*dt) << std::endl;
-			photoArr[crntLayer(radLen2Long(t + i*dt))] += 16000*nChargeTrack*trackLen_scint(t + i*dt,t + (i+1)*dt);
+			//photoArr[crntLayer(radLen2Long(t + i*dt))] += 16000*nChargeTrack*trackLen_scint(t + i*dt,t + (i+1)*dt);
 			//std::cout << photoArr[crntLayer(radLen2Long(t + i*dt))]  << std::endl;
 			//double Ecrt = 0;
 
@@ -213,19 +221,22 @@ int main(){
 	}
 
 	//Try to make a graph of the scintilaiton photons
-	TGraph *g1 = new TGraph(66,layerArr,photoArr);
-	g1->Draw();
+	/*TGraph *g1 = new TGraph(11,genArray,leptonNumber);
+	g1->GetXaxis()->SetTitle("Depth X_{0}");
+	g1->GetYaxis()->SetTitle("Number of Charged Leptons");
+	g1->SetTitle("Electron Positron Simualtion");
+	g1->Draw("A*");*/
 
 	/*
 		Could treat Bremstrahlung as a discrete process that occurs at the start or end of every loop iteration, and do continous simulations of the middle steps
 	*/
 
-	c1->SaveAs("TestCanvas.pdf");
+	//c1->SaveAs("Electron_Positron_Number.pdf");
 
 	//Memory managment 
 	delete randGen;
-	delete g1;
-	delete c1;
+	//delete g1;
+	//delete c1;
 }
 
 /*
