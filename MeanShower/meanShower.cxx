@@ -94,7 +94,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 				inShower.thetaVec.push_back(0);
 
 				//eraseVec.push_back(i);
-				inShower.clearParticle(0); //!!MODIFIED THIS LOGIC!!
+				inShower.clearParticle(i - showPart); 
 				showPart+=1; //Increment number of incident showering particles by 1
 
 			}else if (incEnergy < 2*m_e){ if (verbose) std::cout << "No longer pair producing" << std::endl;}
@@ -117,7 +117,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 				inShower.thetaVec.push_back(0);
 
 				//eraseVec.push_back(i);
-				inShower.clearParticle(0);
+				inShower.clearParticle(i - showPart); //HERE's THE BUG If you enter the non radiative regime the program will remove the first particle in the shower 
 				showPart+=1; //Increment number of incident showering particles by 1
 
 			}else if (incEnergy < E_Crit){  //This may be removed
@@ -170,7 +170,8 @@ std::vector<double> getIntrPoints(int NX0, double size){
 int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
-	double E0 = 500e3; //Starting energy in MeV
+	//double E0 = 500e3; //Starting energy in MeV
+	double E0 = 8;
 	particleR2 initPart = particleR2(E0,0,11);
 	showerR2 inShower = showerR2(initPart);
 	TRandom3 *randGen = new TRandom3();
@@ -198,7 +199,7 @@ int main(){
 	double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 10; t++){ //Loop over the generations
+	for (int t = 0; t < 3; t++){ //Loop over the generations
 		std::cout << "Generation " << t << std::endl;
 		//genArray[t] = t;
 
@@ -206,9 +207,13 @@ int main(){
 		int nChargeTrack = inShower.chargedTracks();
 		//leptonNumber[t] = nChargeTrack;
 		//inShower.showerDump();
-		if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
-		else showerAction1d(inShower, 5, (double) t);
-		if (startLeptonNum != inShower.leptonNumber()) std::cout << "Lepton Number Not Being Conserved" << std::endl;
+		/*if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
+		else showerAction1d(inShower, 5, (double) t);*/
+		showerAction1d(inShower,4, (double) t, false);
+		if (startLeptonNum != inShower.leptonNumber()){
+			std::cout << "Lepton Number Not Being Conserved\n" << inShower.leptonNumber() << std::endl;
+			inShower.showerDump();
+		}
 
 		double Ecrt = 0;
 		for (int i = 0; i < inShower.showerSize(); i++){
@@ -216,7 +221,9 @@ int main(){
 		}
 
 		//Check energy conservation 
-		if (Ecrt != E0){std::cout << "!Energy is Not being conserved!\n" << Ecrt << " != " << E0 << std::endl;}
+		if (Ecrt != E0){
+			std::cout << "!Energy is Not being conserved!\n" << Ecrt << " != " << E0 << std::endl;
+		}
 
 		//long nGamma = 0; //Number of Scintilation photons
 
@@ -239,7 +246,7 @@ int main(){
 		}*/ 
 
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
-		std::cout << "There where " << nChargeTrack << " charged tracks at the start" << std::endl;
+		//std::cout << "There where " << nChargeTrack << " charged tracks at the start" << std::endl;
 		//if (t == 0) inShower.showerDump();
 		//nGamma = (long) layerTrackLen_scint(radLen2Long((double)t),radLen2Long((double)(t + 1)))*chargedTrackNum*8000; //This is causing integer overflows these numbers are too big
 		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;

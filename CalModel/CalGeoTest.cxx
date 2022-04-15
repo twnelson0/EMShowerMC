@@ -25,10 +25,11 @@ int main(){
 		std::cout << "Lead Length = " << layerTrackLen_pb(testArr[i],false) << std::endl;
 	}*/
 
-	std::cout << trackLen_scint(1/500,2/500) << std::endl;
+	/*std::cout << trackLen_scint(1/500,2/500) << std::endl;
 	std::cout << trackLen_scint(0.1,0.4) << std::endl;
 	std::cout << trackLen_scint(0.1,0.15) << std::endl;
-	std::cout << trackLen_scint(0.4,0.6) << std::endl;
+	std::cout << trackLen_scint(0.4,0.6) << std::endl;*/
+	std::cout << trackLen_scint(0,39.6) << std::endl;
 	//std::cout << crntLayer(0.4) << std::endl;
 	//std::cout << *layer << " and " << *(layer + 1) << std::endl;
 
