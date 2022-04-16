@@ -8,6 +8,7 @@
 #include "TH1.h"
 #include "TGraph.h"
 #include "TLegend.h"
+#include "TMultiGraph.h"
 
 //EM Shower Libaries
 #include "../MathMethods/MatterCalc.h"
@@ -170,23 +171,25 @@ std::vector<double> getIntrPoints(int NX0, double size){
 int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
-	//double E0 = 500e3; //Starting energy in MeV
-	double E0 = 8;
+	double E0 = 500e3; //Starting energy in MeV
+	//double E0 = 8;
 	particleR2 initPart = particleR2(E0,0,11);
 	showerR2 inShower = showerR2(initPart);
-	TRandom3 *randGen = new TRandom3();
+	//TRandom3 *randGen = new TRandom3();
 	int Nitr = 500;
-	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
-	//int photoArr[66];
+	TCanvas *c1 = new TCanvas("c1","c1",500,500);
+	int photoArr[25];
 	//int layerArr[66];
 	//double eLossArr[25];
+	int genArr[25];
 
 	//Debugging number of leptons
-	/*int leptonNumber[11];
-	int genArray[11];*/
+	int leptonNumber[25];
+	int partArr[25];
+	//int genArray[25];
 
 	//Set up photon array
-	//for (int i = 0; i < 66; i++){photoArr[i] = 0; layerArr[i] = i;}
+	for (int i = 0; i < 25; i++){photoArr[i] = 0; genArr[i] = i;}
 	
 	//Scintilation photon Histogram
 	
@@ -199,17 +202,18 @@ int main(){
 	double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 3; t++){ //Loop over the generations
+	for (int t = 0; t < 25; t++){ //Loop over the generations
 		std::cout << "Generation " << t << std::endl;
 		//genArray[t] = t;
 
 		//Count the number of charged tracks at the begining of each generation
 		int nChargeTrack = inShower.chargedTracks();
-		//leptonNumber[t] = nChargeTrack;
+		leptonNumber[t] = nChargeTrack;
+		partArr[t] = inShower.showerSize();
 		//inShower.showerDump();
 		/*if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
 		else showerAction1d(inShower, 5, (double) t);*/
-		showerAction1d(inShower,4, (double) t, false);
+		showerAction1d(inShower, 5, (double) t, false);
 		if (startLeptonNum != inShower.leptonNumber()){
 			std::cout << "Lepton Number Not Being Conserved\n" << inShower.leptonNumber() << std::endl;
 			inShower.showerDump();
@@ -225,7 +229,10 @@ int main(){
 			std::cout << "!Energy is Not being conserved!\n" << Ecrt << " != " << E0 << std::endl;
 		}
 
-		//long nGamma = 0; //Number of Scintilation photons
+		int nGamma = 0; //Number of Scintilation photons
+		nGamma = 16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack;
+		photoArr[t] = nGamma;
+		//std::cout << nGamma << std::endl;
 
 		/*for (int i = 0; i < Nitr; i++){ //Simulate behavior between "generations"
 			//std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
@@ -252,12 +259,26 @@ int main(){
 		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;
 	}
 
-	//Try to make a graph of the scintilaiton photons
-	/*TGraph *g1 = new TGraph(11,genArray,leptonNumber);
-	g1->GetXaxis()->SetTitle("Depth X_{0}");
-	g1->GetYaxis()->SetTitle("Number of Charged Leptons");
-	g1->SetTitle("Electron Positron Simualtion");
-	g1->Draw("A*");*/
+	//Graph the number of charged tracks and the number of particles
+	TGraph *gLep = new TGraph(25,genArr,leptonNumber);
+	TGraph *gAll = new TGraph(25,genArr,partArr);
+	TMultiGraph *partGraph = new TMultiGraph();
+	partGraph->Add(gLep);
+	partGraph->Add(gAll);
+	partGraph->GetXaxis()->SetTitle("Depth X_{0}");
+	partGraph->GetYaxis()->SetTitle("Number of Particles");
+	partGraph->SetTitle("Charged Tracks Plot");
+	partGraph->Draw("A*");
+	c1->SaveAs("Shower_Particle_Plot.pdf");
+	delete gLep;
+	delete gAll;
+	c1->Clear();
+
+	//Graph the number of scintilation photons
+	/*TGraph *g2 = new TGraph(25,genArr,photoArr);
+	g2->GetXaxis()->SetTitle("Depth X_{0}");
+	g2->GetYaxis()->SetTitle("Number of Scintilation Photons");
+	g2->SetTitle("");*/
 
 	/*
 		Could treat Bremstrahlung as a discrete process that occurs at the start or end of every loop iteration, and do continous simulations of the middle steps
@@ -266,9 +287,10 @@ int main(){
 	//c1->SaveAs("Electron_Positron_Number.pdf");
 
 	//Memory managment 
-	delete randGen;
+	//delete randGen;
 	//delete g1;
-	//delete c1;
+	delete partGraph;
+	delete c1;
 }
 
 /*
