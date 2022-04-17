@@ -15,6 +15,9 @@ double radLen2Long(double t);
 //Convert longitudnal distance to Radiation Lengths
 double long2RadLen(double z);
 
+//Convert radiation length interval to time given a particle's energy
+double radLen2Time(double tInter, double E, double mass);
+
 //Obtain layer a given point is located within
 int crntLayer(double crntPoint);
 
