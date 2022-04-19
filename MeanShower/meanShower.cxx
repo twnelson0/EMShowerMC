@@ -100,7 +100,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 				inShower.clearParticle(i - showPart); 
 				showPart+=1; //Increment number of incident showering particles by 1
 
-			}else if (incEnergy < 2*m_e){ if (verbose) {std::cout << "No longer pair producing" << std::endl;inShower.printPart(i - showPart);}}
+			}else if (incEnergy < 2*m_e){ if (verbose) {std::cout << "No longer pair producing" << std::endl;} else continue;}//inShower.printPart(i - showPart);}}
 		}
 
 		//Lepton Interactions
@@ -126,11 +126,11 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 			else if (incEnergy < E_Crit){  //This may be removed
 				if (verbose){
 					std::cout << "No longer Bremsstrahlunging" << std::endl;
-					inShower.printPart(i - showPart);
+					//inShower.printPart(i - showPart);
 				}
 				//Shower Attenuation
-				showPart+=1; //Increment number of showerin gparticles by one
 				inShower.clearParticle(i - showPart); //Remove non radiative leptons
+				showPart+=1; //Increment number of showerin gparticles by one
 				
 				//continue;
 				//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
@@ -165,13 +165,11 @@ std::vector<double> getIntrPoints(int NX0, double size){
 int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
-	//double E0 = 800e3; //Starting energy in MeV
-	double E0 = 8;
+	double E0 = 500e3; //Starting energy in MeV
+	//double E0 = 8;
 	particleR2 initPart = particleR2(E0,0,11);
 	showerR2 inShower = showerR2(initPart);
-	//TRandom3 *randGen = new TRandom3();
 	int Nitr = 500;
-	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	int photoArr[25];
 	//int layerArr[66];
 	//double eLossArr[25];
@@ -180,14 +178,19 @@ int main(){
 	//Scintilation photons
 	std::vector<double> scintPhotoVec, timeStampVec;
 
+	//ROOT Objects
+	TCanvas *c1 = new TCanvas("c1","c1",500,500);
+	//TRandom3 *randGen = new TRandom3();
+
+
 
 	//Debugging number of leptons
-	int leptonNumber[25];
-	int partArr[25];
+	//int leptonNumber[25];
+	//int partArr[25];
 	//int genArray[25];
 
 	//Set up photon array
-	for (int i = 0; i < 25; i++){photoArr[i] = 0; genArr[i] = i;}
+	//for (int i = 0; i < 25; i++){photoArr[i] = 0; genArr[i] = i;}
 	
 	//Scintilation photon Histogram
 	
@@ -206,13 +209,13 @@ int main(){
 
 		//Count the number of charged tracks at the begining of each generation
 		int nChargeTrack = inShower.chargedTracks();
-		leptonNumber[t] = nChargeTrack;
-		partArr[t] = inShower.showerSize();
+		//leptonNumber[t] = nChargeTrack;
+		//partArr[t] = inShower.showerSize();
 		//inShower.showerDump();
 		/*if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
 		else showerAction1d(inShower, 5, (double) t);*/
-		showerAction1d(inShower, 2, (double) t, true);
-		if (inShower.showerSize() == 0) {std::cout << "Ending Shower" << std::endl; break;} //End shower
+		showerAction1d(inShower, 5, (double) t, false);
+		if (nChargeTrack == 0) {std::cout << "Ending Shower" << std::endl; break;} //End shower
 		
 		//Check Lepton Number conservation for debugging purposes
 		/*if (startLeptonNum != inShower.leptonNumber()){
@@ -220,7 +223,7 @@ int main(){
 			inShower.showerDump();
 		}*/
 
-		if (leptonNumber[t] > partArr[t]) std::cout << "More Leptons then particles?" << std::endl;
+		//if (leptonNumber[t] > partArr[t]) std::cout << "More Leptons then particles?" << std::endl;
 
 		/*double Ecrt = 0;
 		for (int i = 0; i < inShower.showerSize(); i++){
@@ -231,10 +234,11 @@ int main(){
 		//if (Ecrt != E0)std::cout << "!Energy is Not being conserved!\n" << Ecrt << " != " << E0 << std::endl;
 		
 
-		int nGamma = 0; //Number of Scintilation photons
+		double nGamma = 0; //Number of Scintilation photons
 		nGamma = 16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack;
-		timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e));
-		scintPhotoVec.push_back(nGamma);
+		if (t == 0) timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e)); //First track
+		else timeStampVec.push_back(timeStampVec.at(t - 1) + radLen2Time(1,E0/pow(2,t),m_e));
+		scintPhotoVec.push_back(nGamma*0.15*0.12); //Scale by both PMT quantum efficency and 15% fiber transmission (12% for PMT place holder from LHCB paper)
 		//std::cout << nGamma << std::endl;
 
 		/*for (int i = 0; i < Nitr; i++){ //Simulate behavior between "generations"
@@ -279,6 +283,14 @@ int main(){
 	delete gAll;
 	c1->Clear();*/
 
+
+	//Graph the number of Scintilation Photons
+	TGraph *gPhoto = new TGraph(scintPhotoVec.size(),&(timeStampVec[0]),&(scintPhotoVec[0]));
+	gPhoto->GetXaxis()->SetTitle("Time (s)");
+	gPhoto->GetYaxis()->SetTitle("Number of Scintilation Photons");
+	gPhoto->Draw("AL*");
+	c1->SaveAs("ScintPhotoPlot_1.pdf");
+
 	//Graph the number of scintilation photons
 	/*TGraph *g2 = new TGraph(25,genArr,photoArr);
 	g2->GetXaxis()->SetTitle("Depth X_{0}");
@@ -295,7 +307,8 @@ int main(){
 	//delete randGen;
 	//delete g1;
 	//delete partGraph;
-	//delete c1;
+	delete gPhoto;
+	delete c1;
 }
 
 /*
