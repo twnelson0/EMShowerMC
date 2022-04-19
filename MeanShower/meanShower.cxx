@@ -117,8 +117,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 				inShower.pVec.push_back(incEnergy*0.5);
 				inShower.thetaVec.push_back(0);
 
-				//eraseVec.push_back(i);
-				inShower.clearParticle(i - showPart); //HERE's THE BUG If you enter the non radiative regime the program will remove the first particle in the shower 
+				inShower.clearParticle(i - showPart); 
 				showPart+=1; //Increment number of incident showering particles by 1
 
 			}else if (incEnergy < E_Crit){  //This may be removed
@@ -126,7 +125,10 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 					std::cout << "No longer Bremsstrahlunging" << std::endl;
 					inShower.printPart(i);
 				}
-				continue;
+				//Shower Attenuation
+				showPart+=1; //Increment number of showerin gparticles by one
+				inShower.clearParticle(i - showPart); //Remove non radiative leptons
+				//continue;
 				//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
 
 				//Simulate Ionization loss
@@ -171,17 +173,20 @@ std::vector<double> getIntrPoints(int NX0, double size){
 int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
-	double E0 = 500e3; //Starting energy in MeV
-	//double E0 = 8;
+	double E0 = 800e3; //Starting energy in MeV
 	particleR2 initPart = particleR2(E0,0,11);
 	showerR2 inShower = showerR2(initPart);
 	//TRandom3 *randGen = new TRandom3();
 	int Nitr = 500;
-	TCanvas *c1 = new TCanvas("c1","c1",500,500);
+	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	int photoArr[25];
 	//int layerArr[66];
 	//double eLossArr[25];
 	int genArr[25];
+
+	//Scintilation photons
+	std::vector<double> scintPhotoVec, timeStampArr;
+
 
 	//Debugging number of leptons
 	int leptonNumber[25];
@@ -219,6 +224,8 @@ int main(){
 			inShower.showerDump();
 		}
 
+		if (leptonNumber[t] > partArr[t]) std::cout << "More Leptons then particles?" << std::endl;
+
 		double Ecrt = 0;
 		for (int i = 0; i < inShower.showerSize(); i++){
 			Ecrt += inShower.EVec.at(i);
@@ -253,6 +260,7 @@ int main(){
 		}*/ 
 
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
+		if (inShower.showerSize() == 0) break; //End shower
 		//std::cout << "There where " << nChargeTrack << " charged tracks at the start" << std::endl;
 		//if (t == 0) inShower.showerDump();
 		//nGamma = (long) layerTrackLen_scint(radLen2Long((double)t),radLen2Long((double)(t + 1)))*chargedTrackNum*8000; //This is causing integer overflows these numbers are too big
@@ -260,19 +268,21 @@ int main(){
 	}
 
 	//Graph the number of charged tracks and the number of particles
-	TGraph *gLep = new TGraph(25,genArr,leptonNumber);
-	TGraph *gAll = new TGraph(25,genArr,partArr);
+	/*TGraph *gLep = new TGraph(25,genArr,leptonNumber); gLep->SetMarkerStyle(21); gLep->SetTitle("Charged Tracks");
+	TGraph *gAll = new TGraph(25,genArr,partArr); gAll->SetMarkerStyle(22); gAll->SetTitle("All Particles");
+	TLegend *l1 = new TLegend();
 	TMultiGraph *partGraph = new TMultiGraph();
 	partGraph->Add(gLep);
 	partGraph->Add(gAll);
 	partGraph->GetXaxis()->SetTitle("Depth X_{0}");
 	partGraph->GetYaxis()->SetTitle("Number of Particles");
 	partGraph->SetTitle("Charged Tracks Plot");
-	partGraph->Draw("A*");
+	partGraph->Draw("AP");
+	c1->BuildLegend();
 	c1->SaveAs("Shower_Particle_Plot.pdf");
 	delete gLep;
 	delete gAll;
-	c1->Clear();
+	c1->Clear();*/
 
 	//Graph the number of scintilation photons
 	/*TGraph *g2 = new TGraph(25,genArr,photoArr);
@@ -289,8 +299,8 @@ int main(){
 	//Memory managment 
 	//delete randGen;
 	//delete g1;
-	delete partGraph;
-	delete c1;
+	//delete partGraph;
+	//delete c1;
 }
 
 /*
