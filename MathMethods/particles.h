@@ -73,7 +73,7 @@ public:
 		int leptonNumber = 0;
 		for (int i = 0; i < this->showerSize(); i++){
 			if (abs(this->idVec.at(i)) == 11) leptonNumber+=this->idVec.at(i);
-			else continue;
+			//else continue;
 		}
 
 		return leptonNumber/11;
@@ -85,7 +85,7 @@ public:
 
 		for (int i = 0; i < this->showerSize(); i++){
 			if (abs(this->idVec.at(i)) == 11) chargedTracks+=1;
-			else continue;
+			//else continue;
 		}
 
 		return chargedTracks;
@@ -105,6 +105,13 @@ public:
 		this->EVec.erase(this->EVec.begin() + partIndx);
 		this->thetaVec.erase(this->thetaVec.begin() + partIndx);
 		this->pVec.erase(this->pVec.begin() + partIndx);
+	}
+
+	//Print all the particles
+	void showerDump(){
+		for (int i = 0; i < this->showerSize(); i++){
+			this->printPart(i);
+		}
 	}
 
 

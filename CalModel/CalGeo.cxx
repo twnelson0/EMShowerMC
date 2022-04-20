@@ -16,6 +16,20 @@ double radLen2Long(double t){return (39.6/25)*t;}
 
 double long2RadLen(double z){return (25/39.6)*z;}
 
+double radLen2Time(double tInter, double E, double mass){
+	double gamma, beta;
+
+	//Obatin the lorentz factor from the energy
+	if (mass == 0){ //Photon
+		return radLen2Long(tInter)*1e-2/3e8;
+	}else{
+		//Obtain beta for particle
+		gamma = E/mass; 
+		beta = sqrt(1 - pow(gamma,-2));
+		return radLen2Long(tInter)*1e-2/(beta*3e8);
+	}
+}
+
 int crntLayer(double crntPoint){return (int) (floor(10*crntPoint) - (int) floor(10*crntPoint) % 6)/6;}
 
 double* layerTerminus(double startPoint){

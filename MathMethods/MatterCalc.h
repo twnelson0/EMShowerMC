@@ -16,6 +16,7 @@ namespace physConstants{
 	const double rho_pb =  11.35; //Density in g/cm^3
 	const double rho_scint = 1.08; //For Polyesterine based Scintilators
 	const double Z_pb = 82;
+	const double c = 299792458; //c in m/s (NIST value)
 	//const double X0_Sint = ;//Radiation length of scintlator materail
 	//const double eCrit_pb = ; //Critical energy of lead
 }
