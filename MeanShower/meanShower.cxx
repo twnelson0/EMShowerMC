@@ -162,6 +162,23 @@ std::vector<double> getIntrPoints(int NX0, double size){
 }
 
 
+//Shower and record total number of scintilation photons produced
+int scintShower(int maxLen, double Einit, int partId, double critVal = 5){
+	int scintPhoto = 0; //Number of scintilation photons
+	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
+	showerR2 inShower = showerR2(initPart); //Set up shower object
+	int trackArr[2] = 
+
+	//Shower through the calorimter
+	for (int i = 0; i < maxLen; i++){
+		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
+		scintPhoto+=floor(16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack); //Get the number of raw scintilation photons produced
+		showerAction1d(inShower); //Shower after 1 radiation length
+		if (nChargeTrack)
+	}
+}
+
+
 int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
@@ -176,7 +193,7 @@ int main(){
 	int genArr[25];
 
 	//Scintilation photons
-	std::vector<double> scintPhotoVec, timeStampVec;
+	std::vector<double> scintPhotoVec, timeStampVec, leptVec;
 
 	//ROOT Objects
 	TCanvas *c1 = new TCanvas("c1","c1",500,500);
@@ -236,8 +253,10 @@ int main(){
 
 		double nGamma = 0; //Number of Scintilation photons
 		nGamma = 16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack;
-		if (t == 0) timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e)); //First track
-		else timeStampVec.push_back(timeStampVec.at(t - 1) + radLen2Time(1,E0/pow(2,t),m_e));
+		/*if (t == 0) timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e)); //First track
+		else timeStampVec.push_back(timeStampVec.at(t - 1) + radLen2Time(1,E0/pow(2,t),m_e));*/
+		leptVec.push_back((double) nChargeTrack);
+		timeStampVec.push_back((double) t);
 		scintPhotoVec.push_back(nGamma*0.15*0.12); //Scale by both PMT quantum efficency and 15% fiber transmission (12% for PMT place holder from LHCB paper)
 		//std::cout << nGamma << std::endl;
 
@@ -286,10 +305,20 @@ int main(){
 
 	//Graph the number of Scintilation Photons
 	TGraph *gPhoto = new TGraph(scintPhotoVec.size(),&(timeStampVec[0]),&(scintPhotoVec[0]));
-	gPhoto->GetXaxis()->SetTitle("Time (s)");
+	gPhoto->GetXaxis()->SetTitle("Generation");
 	gPhoto->GetYaxis()->SetTitle("Number of Scintilation Photons");
 	gPhoto->Draw("AL*");
 	c1->SaveAs("ScintPhotoPlot_1.pdf");
+	c1->Clear();
+	delete gPhoto;
+
+	//Graph the number of charged tracks per generation
+	TGraph *gCharge = new TGraph(scintPhotoVec.size(),&(timeStampVec[0]),&(leptVec[0]));
+	gCharge->GetXaxis()->SetTitle("Depth X_{0}");
+	gCharge->GetYaxis()->SetTitle("Number of ChargedTracks");
+	gCharge->SetTitle("Nubmer of Charged Tracks");
+	gCharge->Draw("AL*");
+	c1->SaveAs("ChargedTrackPlot.pdf");
 
 	//Graph the number of scintilation photons
 	/*TGraph *g2 = new TGraph(25,genArr,photoArr);
@@ -307,7 +336,7 @@ int main(){
 	//delete randGen;
 	//delete g1;
 	//delete partGraph;
-	delete gPhoto;
+	delete gCharge;
 	delete c1;
 }
 
