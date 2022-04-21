@@ -33,6 +33,17 @@ double effRadLen(std::vector<double> X0Vec, std::vector<double> lenVec){
 }
 
 
+//Linspace function
+std::vector<double> linspace(double startVal, double endVal, uint size){
+	std::vector<double> linspaveVec;
+	double dx = (endVal - startVal)/(size - 1);
+
+	//Fill vector
+	for (uint i = 0; i < size; i++){linspaveVec.push_back(startVal + (double) i*dx);}
+
+	return linspaveVec;
+}
+
 //Critical Energy of electron/positrons to bremsstralung
 /*double critE(){
 

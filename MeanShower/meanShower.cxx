@@ -163,19 +163,21 @@ std::vector<double> getIntrPoints(int NX0, double size){
 
 
 //Shower and record total number of scintilation photons produced
-int scintShower(int maxLen, double Einit, int partId, double critVal = 5){
-	int scintPhoto = 0; //Number of scintilation photons
+long scintShower(int maxLen, double Einit, int partId, double critVal = 5){
+	long scintPhoto = 0; //Number of scintilation photons
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
 	showerR2 inShower = showerR2(initPart); //Set up shower object
-	int trackArr[2] = 
+	//int trackArr[2] = 
 
 	//Shower through the calorimter
 	for (int i = 0; i < maxLen; i++){
 		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
-		scintPhoto+=floor(16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack); //Get the number of raw scintilation photons produced
-		showerAction1d(inShower); //Shower after 1 radiation length
-		if (nChargeTrack)
+		scintPhoto+=floor(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack); //Get the number of raw scintilation photons produced
+		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
+		if (nChargeTrack == 0) break;
 	}
+
+	return scintPhoto;
 }
 
 
@@ -194,10 +196,17 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> scintPhotoVec, timeStampVec, leptVec;
+	std::vector<double> inputE = linspace(500,5000);
+	std::vector<long> scintPhotoVec;
+	//long testPhoton = scintShower(25,E0,11);
+	//std::cout << testPhoton << std::endl;
 
 	//ROOT Objects
-	TCanvas *c1 = new TCanvas("c1","c1",500,500);
+	/Canvas *c1 = new TCanvas("c1","c1",500,500);
 	//TRandom3 *randGen = new TRandom3();
+
+	//Loop over all incident particle energies
+	for ( double E : inputE) scintPhotoVec.push_back();
 
 
 
@@ -216,11 +225,11 @@ int main(){
 	//showerVec.push_back(initPart);
 
 	//int startLeptonNum = leptonNumber(inShower);
-	int startLeptonNum = inShower.leptonNumber();
-	double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
+	//int startLeptonNum = inShower.leptonNumber();
+	//double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
 
 	//Propogate over 25 Radiation Lengths
-	for (int t = 0; t < 25; t++){ //Loop over the generations
+	/*for (int t = 0; t < 25; t++){ //Loop over the generations
 		std::cout << "Generation " << t << std::endl;
 		//genArray[t] = t;
 
@@ -229,23 +238,10 @@ int main(){
 		//leptonNumber[t] = nChargeTrack;
 		//partArr[t] = inShower.showerSize();
 		//inShower.showerDump();
-		/*if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
-		else showerAction1d(inShower, 5, (double) t);*/
+		//if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
+		//else showerAction1d(inShower, 5, (double) t);
 		showerAction1d(inShower, 5, (double) t, false);
 		if (nChargeTrack == 0) {std::cout << "Ending Shower" << std::endl; break;} //End shower
-		
-		//Check Lepton Number conservation for debugging purposes
-		/*if (startLeptonNum != inShower.leptonNumber()){
-			std::cout << "Lepton Number Not Being Conserved\n" << inShower.leptonNumber() << std::endl;
-			inShower.showerDump();
-		}*/
-
-		//if (leptonNumber[t] > partArr[t]) std::cout << "More Leptons then particles?" << std::endl;
-
-		/*double Ecrt = 0;
-		for (int i = 0; i < inShower.showerSize(); i++){
-			Ecrt += inShower.EVec.at(i);
-		}*/
 
 		//Check energy conservation 
 		//if (Ecrt != E0)std::cout << "!Energy is Not being conserved!\n" << Ecrt << " != " << E0 << std::endl;
@@ -253,37 +249,19 @@ int main(){
 
 		double nGamma = 0; //Number of Scintilation photons
 		nGamma = 16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack;
-		/*if (t == 0) timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e)); //First track
-		else timeStampVec.push_back(timeStampVec.at(t - 1) + radLen2Time(1,E0/pow(2,t),m_e));*/
+		//if (t == 0) timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e)); //First track
+		//else timeStampVec.push_back(timeStampVec.at(t - 1) + radLen2Time(1,E0/pow(2,t),m_e));
 		leptVec.push_back((double) nChargeTrack);
 		timeStampVec.push_back((double) t);
 		scintPhotoVec.push_back(nGamma*0.15*0.12); //Scale by both PMT quantum efficency and 15% fiber transmission (12% for PMT place holder from LHCB paper)
 		//std::cout << nGamma << std::endl;
-
-		/*for (int i = 0; i < Nitr; i++){ //Simulate behavior between "generations"
-			//std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
-
-			//Check Lepton Number conversion
-			if (startLeptonNum != inShower.leptonNumber()) std::cout << "Lepton Number Not Being Conserved" << std::endl;
-			
-
-			//Scinitlation photons !!THIS IS CAUSING UNDEFINED BEHAVIOR!!
-			//std::cout << crntLayer(radLen2Long(t + i*dt)) << std::endl;
-			//std::cout << "Layer = " << crntLayer(t + i*dt) << std::endl;
-			//currentLayerMat(t + i*dt);
-			//currentLayerMat(t + (i+1)*dt);
-			//std::cout << "Layer = " << crntLayer(t + (i + 1)*dt) << std::endl;
-			//photoArr[crntLayer(radLen2Long(t + i*dt))] += 16000*nChargeTrack*trackLen_scint(t + i*dt,t + (i+1)*dt);
-			//std::cout << photoArr[crntLayer(radLen2Long(t + i*dt))]  << std::endl;
-			//
-		}*/ 
 
 		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
 		//std::cout << "There where " << nChargeTrack << " charged tracks at the start" << std::endl;
 		//if (t == 0) inShower.showerDump();
 		//nGamma = (long) layerTrackLen_scint(radLen2Long((double)t),radLen2Long((double)(t + 1)))*chargedTrackNum*8000; //This is causing integer overflows these numbers are too big
 		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;
-	}
+	}*/
 
 	//Graph the number of charged tracks and the number of particles
 	/*TGraph *gLep = new TGraph(25,genArr,leptonNumber); gLep->SetMarkerStyle(21); gLep->SetTitle("Charged Tracks");
@@ -304,7 +282,7 @@ int main(){
 
 
 	//Graph the number of Scintilation Photons
-	TGraph *gPhoto = new TGraph(scintPhotoVec.size(),&(timeStampVec[0]),&(scintPhotoVec[0]));
+	/*TGraph *gPhoto = new TGraph(scintPhotoVec.size(),&(timeStampVec[0]),&(scintPhotoVec[0]));
 	gPhoto->GetXaxis()->SetTitle("Generation");
 	gPhoto->GetYaxis()->SetTitle("Number of Scintilation Photons");
 	gPhoto->Draw("AL*");
@@ -318,7 +296,7 @@ int main(){
 	gCharge->GetYaxis()->SetTitle("Number of ChargedTracks");
 	gCharge->SetTitle("Nubmer of Charged Tracks");
 	gCharge->Draw("AL*");
-	c1->SaveAs("ChargedTrackPlot.pdf");
+	c1->SaveAs("ChargedTrackPlot.pdf");*/
 
 	//Graph the number of scintilation photons
 	/*TGraph *g2 = new TGraph(25,genArr,photoArr);
@@ -326,18 +304,14 @@ int main(){
 	g2->GetYaxis()->SetTitle("Number of Scintilation Photons");
 	g2->SetTitle("");*/
 
-	/*
-		Could treat Bremstrahlung as a discrete process that occurs at the start or end of every loop iteration, and do continous simulations of the middle steps
-	*/
-
 	//c1->SaveAs("Electron_Positron_Number.pdf");
 
 	//Memory managment 
 	//delete randGen;
 	//delete g1;
 	//delete partGraph;
-	delete gCharge;
-	delete c1;
+	//delete gCharge;
+	//delete c1;
 }
 
 /*

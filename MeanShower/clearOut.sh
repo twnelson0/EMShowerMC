@@ -8,6 +8,7 @@ fi
 
 if [[ -e meanShower.out ]]; then
 	rm CalGeo.o
+	rm MatterCalc.o
 	rm meanShower.o
 	rm meanShower.out
 fi

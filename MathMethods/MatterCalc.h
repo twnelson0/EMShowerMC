@@ -25,7 +25,7 @@ double radLen(uint Znuc, double Ar, double rho, bool densityBool);
 
 double effRadLen(std::vector<double> X0Vec, std::vector<double> lenVec); //Effective radiation length for multi layered object (such as a colorimeter)
 
-//std::vector<double> linspace(double startVal, double endVal, uint size = 50);
+std::vector<double> linspace(double startVal, double endVal, uint size = 50);
 
 //double critE(); //Critical energy of electron/positron to bremstralung
 
