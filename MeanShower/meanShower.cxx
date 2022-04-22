@@ -1,6 +1,7 @@
 //Standard c++ libaries
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 //ROOT Libaries
 #include "TCanvas.h"
@@ -9,6 +10,8 @@
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
+#include "TFile.h"
+#include "TString.h"
 
 //EM Shower Libaries
 #include "../MathMethods/MatterCalc.h"
@@ -163,8 +166,8 @@ std::vector<double> getIntrPoints(int NX0, double size){
 
 
 //Shower and record total number of scintilation photons produced
-long scintShower(int maxLen, double Einit, int partId, double critVal = 5){
-	long scintPhoto = 0; //Number of scintilation photons
+std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVal = 5){
+	std::vector<int> showerScint; //Number of scintilation photons
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
 	showerR2 inShower = showerR2(initPart); //Set up shower object
 	//int trackArr[2] = 
@@ -172,12 +175,12 @@ long scintShower(int maxLen, double Einit, int partId, double critVal = 5){
 	//Shower through the calorimter
 	for (int i = 0; i < maxLen; i++){
 		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
-		scintPhoto+=floor(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack); //Get the number of raw scintilation photons produced
+		showerScint.push_back(floor(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15)); //Get scintilation photons detected 
 		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
 		if (nChargeTrack == 0) break;
 	}
 
-	return scintPhoto;
+	return showerScint;
 }
 
 
@@ -195,18 +198,42 @@ int main(){
 	int genArr[25];
 
 	//Scintilation photons
-	std::vector<double> scintPhotoVec, timeStampVec, leptVec;
-	std::vector<double> inputE = linspace(500,5000);
-	std::vector<long> scintPhotoVec;
+	std::vector<double> timeStampVec, leptVec;
+	std::vector<double> inputE = linspace(500,5000,20);
 	//long testPhoton = scintShower(25,E0,11);
 	//std::cout << testPhoton << std::endl;
 
 	//ROOT Objects
-	/Canvas *c1 = new TCanvas("c1","c1",500,500);
+	TFile *f1 = new TFile("ScintPhotoOut.csv","RECREATE");
+	//Canvas *c1 = new TCanvas("c1","c1",500,500);
 	//TRandom3 *randGen = new TRandom3();
 
+	//Add vector of energies to the ROOT file
+	f1->WriteObject(&inputE,"Initial_E");
+	int showerNum = 0;
+
 	//Loop over all incident particle energies
-	for ( double E : inputE) scintPhotoVec.push_back();
+	for ( double E : inputE) {
+		TString crntName; crntName.Form("Shower_%d",showerNum);
+		std::vector<int> showerVec = scintShower(25,E*1e3,11);
+		f1->WriteObject(&showerVec,crntName); //Write current Vector
+		showerNum++;
+
+	} //Fill Scintilaiton photon vector
+
+	f1->Close();
+	delete f1;
+
+
+	//Write Scintilation Photon Count and energies out to a csv file
+	/*std::ofstream scintCSV;
+	scintCSV.open("TestCSV.csv");
+	scintCSV << "Energy (MeV), Scintilation Photons" << "\n";
+	for (int i = 0; i < scintPhotoVec.size();i++){
+		scintCSV << inputE.at(i) << "," << scintPhoto.at(i) << "\n";
+	}
+
+	scintCSV.close();*/
 
 
 
@@ -314,29 +341,6 @@ int main(){
 	//delete c1;
 }
 
-/*
-I will wan to count the scintilation photons either during the continous loop or 
-after each generation, taking into account the number of photons in each layer
-
-If I use the first option I can write a function that take a given range and determines 
-which scintiltaor it falls within (perhaps cutting out any part that isn't in a scintilator)
-
-Still not sure what the best solution is as if I choose the first I have to wory about a range 
-enetering into the adjacent lead layer, it almost seems like I need to include a function that cuts
-off any part of the track length not contained in the scintlator before getting N-gamma
-
-Scheme:
-Input(start,end): function gets intial or final scintilation layer, not valid if |start - end| > 6 mm
-From there can determine which scintilation layer I'm in
-
-Want another function that can trim any part of a length outside the scintilator in similar to 
-the layerTrackLen_scint function
-
-from there I can map a number of photons produced within a given length of scintilator to a specific layer and store it
-This should also allow me to deal with generation lines that fall within a scintilator
-
-
-*/
 
 
 /*
