@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <thread>
 
 //ROOT Libaries
 #include "TCanvas.h"
@@ -151,6 +152,11 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 	}
 }
 
+//Shower for full LLP event consisting of 2 particles
+//void showerAction_Full(std::vector<>, double E_Crit, double crntRadLen, bool verbose = false){
+	
+//}
+
 
 //Determine the physical location of each interaction given 
 std::vector<double> getIntrPoints(int NX0, double size){
@@ -165,7 +171,7 @@ std::vector<double> getIntrPoints(int NX0, double size){
 }
 
 
-//Shower and record total number of scintilation photons produced
+//Shower and record total number of scintilation photons produced 
 std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVal = 5){
 	std::vector<int> showerScint; //Number of scintilation photons
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
@@ -175,12 +181,32 @@ std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVa
 	//Shower through the calorimter
 	for (int i = 0; i < maxLen; i++){
 		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
-		showerScint.push_back(floor(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15)); //Get scintilation photons detected 
+		showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
 		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
 		if (nChargeTrack == 0) break;
 	}
 
 	return showerScint;
+}
+
+
+//Shower and record total number of scintilation photons produced (Multithreaded)
+void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal = 5){
+	//std::vector<int> showerScint; //Number of scintilation photons
+	std::cout << "Starting Single Shower" << std::endl;
+	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
+	showerR2 inShower = showerR2(initPart); //Set up shower object
+	//int trackArr[2] = 
+
+	//Shower through the calorimter
+	for (int i = 0; i < maxLen; i++){
+		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
+		showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
+		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
+		if (nChargeTrack == 0) break; //End shower if there are no more charged particles
+	}
+
+	//return showerScint;
 }
 
 
@@ -199,13 +225,15 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	std::vector<double> inputE = linspace(500,5000,20);
+	std::vector<double> inputE = linspace(100,500,10);
+	std::vector<double> sumScintPhoto;
+
 	//long testPhoton = scintShower(25,E0,11);
 	//std::cout << testPhoton << std::endl;
 
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut.csv","RECREATE");
-	//Canvas *c1 = new TCanvas("c1","c1",500,500);
+	TFile *f1 = new TFile("ScintPhotoOut_Test1.root","RECREATE");
+	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	//TRandom3 *randGen = new TRandom3();
 
 	//Add vector of energies to the ROOT file
@@ -215,14 +243,45 @@ int main(){
 	//Loop over all incident particle energies
 	for ( double E : inputE) {
 		TString crntName; crntName.Form("Shower_%d",showerNum);
-		std::vector<int> showerVec = scintShower(25,E*1e3,11);
-		f1->WriteObject(&showerVec,crntName); //Write current Vector
+		std::cout << "E = " << E << " GeV" << std::endl;
+		//Create 2 threads for each input particle
+		//std::thread t1,t2;
+		double photoSum = 0;
+		std::vector<int> showerVec_elec, showerVec_pos, totalVec; 
+		
+		std::thread t1(scintShower_Thread,showerVec_elec,E,11,5); //Electron Shower
+		std::thread t2(scintShower_Thread,showerVec_pos,E,-11,5); //Positron Shower
+
+		t1.join();
+		t2.join();
+		
+		//scintShower(25,E*1e3,11); //Old single threaded shower
+		for (int i = 0; i < showerVec_pos.size(); i++){totalVec.push_back(showerVec_elec.at(i) + showerVec_pos.at(i));}
+		f1->WriteObject(&totalVec,crntName); //Write current Vector
 		showerNum++;
 
+		//Combine the scintilations photons into 1 vector
+		/*for (int i = 0; i < showerVec.size(); i++){photoSum += (double)showerVec.at(i);}
+		sumScintPhoto.push_back(photoSum);*/
 	} //Fill Scintilaiton photon vector
+	
 
 	f1->Close();
-	delete f1;
+	//delete f1;
+	
+	//Loop over the total scintilation photon vector
+	//for (double v : sumScintPhoto){std::cout << v << std::endl;}
+
+	//Graph SCintilation Photons as Sanity Check
+	/*TGraph *g1 = new TGraph(sumScintPhoto.size(),&(inputE[0]),&(sumScintPhoto[0]));
+	g1->GetYaxis()->SetTitle("Input Energy (GeV)");
+	g1->GetYaxis()->SetTitle("Total Number of Scintilation Photons");
+	g1->SetTitle("Total Scintilation Photons");
+	g1->Draw("A*");
+	c1->SaveAs("Scintilation_PhotonTest_2.pdf");
+
+	delete g1;*/
+	//c1->Close();
 
 
 	//Write Scintilation Photon Count and energies out to a csv file
