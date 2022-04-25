@@ -227,19 +227,19 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	std::vector<double> inputE = linspace(500,5000,20);
+	std::vector<double> inputE = linspace(500,5000,10);
 	std::vector<double> sumScintPhoto;
 
 	//long testPhoton = scintShower(25,E0,11);
 	//std::cout << testPhoton << std::endl;
 
 	//ROOT Objects
-	//TFile *f1 = new TFile("ScintPhotoOut_Test1.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut1.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	//TRandom3 *randGen = new TRandom3();
 
 	//Add vector of energies to the ROOT file
-	//f1->WriteObject(&inputE,"Initial_E");
+	f1->WriteObject(&inputE,"Initial_E");
 	int showerNum = 0;
 
 	//Loop over all incident particle energies
@@ -252,8 +252,8 @@ int main(){
 		std::vector<int> showerVec_elec, showerVec_pos, totalVec; 
 		std::vector<int> showerVecArr[2];
 		
-		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E,11,5); //Electron Shower
-		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E,-11,5); //Positron Shower
+		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,5); //Electron Shower
+		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,5); //Positron Shower
 
 		t1.join();
 		t2.join();
@@ -281,9 +281,9 @@ int main(){
 		totalVec = showerVecArr[0];
 		for (int i = 0; i < showerVecArr[1].size(); i++){totalVec.at(i) = totalVec.at(i) + showerVecArr[1].at(i);}
 		//for (int i = 0; i < showerVec_elec.size(); i++){totalVec.push_back(showerVec_elec.at(i) + showerVec_pos.at(i));}
-		//f1->WriteObject(&totalVec,crntName); //Write current Vector
+		f1->WriteObject(&totalVec,crntName); //Write current Vector
 		showerNum++;
-		for (int phot : totalVec){std::cout << phot << std::endl;}
+		//for (int phot : totalVec){std::cout << phot << std::endl;}
 
 		//Combine the scintilations photons into 1 vector
 		/*for (int i = 0; i < showerVec.size(); i++){photoSum += (double)showerVec.at(i);}
@@ -291,7 +291,7 @@ int main(){
 	} //Fill Scintilaiton photon vector
 	
 
-	//f1->Close();
+	f1->Close();
 	//delete f1;
 	
 	//Loop over the total scintilation photon vector
