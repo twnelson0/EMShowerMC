@@ -173,7 +173,7 @@ std::vector<double> getIntrPoints(int NX0, double size){
 
 
 //Shower and record total number of scintilation photons produced 
-std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVal = 5){
+std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVal){
 	std::vector<int> showerScint; //Number of scintilation photons
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
 	showerR2 inShower = showerR2(initPart); //Set up shower object
@@ -192,7 +192,7 @@ std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVa
 
 
 //Shower and record total number of scintilation photons produced (Multithreaded)
-void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal = 5.){
+void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal){
 	//std::vector<int> showerScint; //Number of scintilation photons
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
@@ -234,7 +234,7 @@ int main(){
 	//std::cout << testPhoton << std::endl;
 
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut1.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_FixedECrit.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	//TRandom3 *randGen = new TRandom3();
 
@@ -252,8 +252,8 @@ int main(){
 		std::vector<int> showerVec_elec, showerVec_pos, totalVec; 
 		std::vector<int> showerVecArr[2];
 		
-		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,5); //Electron Shower
-		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,5); //Positron Shower
+		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,93.11); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
+		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,93.11); //Positron Shower
 
 		t1.join();
 		t2.join();
