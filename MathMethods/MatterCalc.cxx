@@ -44,6 +44,17 @@ std::vector<double> linspace(double startVal, double endVal, uint size){
 	return linspaveVec;
 }
 
+//Logspace fucntion
+std::vector<double> logspace(double startVal, double endVal, uint size){
+	std::vector<double> logspaceVec;
+	double scale = exp(log(endVal/startVal)*pow((double) (size - 1), -1));
+
+	for (uint i = 0; i < size; i++){logspaceVec.push_back(startVal*pow(scale,i));}
+
+	return logspaceVec;
+}
+
+
 //Critical Energy of electron/positrons to bremsstralung
 /*double critE(){
 

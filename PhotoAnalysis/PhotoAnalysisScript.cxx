@@ -91,7 +91,7 @@ void showerPlot(TFile *f, double EVal, bool verbose = false){
 	for (std::vector<int>::iterator it = EVec->begin(); it != EVec->end(); it++){
 		radLenVec.push_back((double)radLenVal);
 		photoVec.push_back((double) *it);
-		if (verbose) {std::cout << *it << std::endl;}
+		//if (verbose) {std::cout << *it << std::endl;}
 		radLenVal++;
 	}
 	
@@ -113,7 +113,7 @@ void showerPlot(TFile *f, double EVal, bool verbose = false){
 
 int main(){
 	std::cout << "Test" << std::endl; 
-	TFile *f = TFile::Open("ScintPhotoOut_HomogTest_3.root","READ");
+	TFile *f = TFile::Open("ScintPhotoOut_HomogTest_5.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
 
@@ -126,16 +126,17 @@ int main(){
 	std::vector<double> sumPhotVec;
 	std::vector<double> energyVec;
 	//Get Sum of Photons Vector
-	for (int i = 0; i < EMap.size(); i++){
-		sumPhotVec.push_back((double) photoSum(f,500. + i*500.));
-		std::cout << sumPhotVec.at(i) << std::endl;
-		energyVec.push_back((500. + 500.*i)*2);
+	for (const auto &mapPair : EMap){
+		sumPhotVec.push_back((double) photoSum(f,mapPair.first));
+		//std::cout << sumPhotVec.at(i) << std::endl;
+		energyVec.push_back((mapPair.first)*2);
 	}
 
 	//Get all the shower plot 
-	for (double E : energyVec){
-		if (E == 1000 || E == 3000) showerPlot(f,E/2,true);
-		else showerPlot(f,E/2);
+	for (const auto &mapPair : EMap){
+		/*if (E == 1000 || E == 3000) showerPlot(f,E/2,true);
+		else showerPlot(f,E/2);*/
+		showerPlot(f,mapPair.first,true);
 	}
 
 	//Make the plot
@@ -145,7 +146,7 @@ int main(){
 	g1->GetXaxis()->SetTitle("LLP Energy (GeV)");
 	g1->GetYaxis()->SetTitle("Sum of Scintillation Photons");
 	g1->Draw("A*");
-	c1->SaveAs("ScintPhotoSumPlot_Homog3.png");
+	c1->SaveAs("ScintPhotoSumPlot_Homog4.png");
 
 	delete g1;
 	c1->Close();

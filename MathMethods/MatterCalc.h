@@ -27,6 +27,8 @@ double effRadLen(std::vector<double> X0Vec, std::vector<double> lenVec); //Effec
 
 std::vector<double> linspace(double startVal, double endVal, uint size = 50);
 
+std::vector<double> logspace(double startVal, double endVal, uint size = 50);
+
 //double critE(); //Critical energy of electron/positron to bremstralung
 
 #endif

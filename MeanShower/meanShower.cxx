@@ -203,7 +203,7 @@ std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVa
 
 
 //Shower and record total number of scintilation photons produced (Multithreaded)
-void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal){
+void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal, TRandom3 *gen){
 	//std::vector<int> showerScint; //Number of scintilation photons
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
@@ -216,9 +216,9 @@ void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit,
 		if (nChargeTrack == 0) break; //End shower if there are no more charged particles
 		//std::cout << "Track Length between " << i << " and " << ++i << " = " << layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1)) << std::endl;
 		
-		//showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
+		//showerScint.push_back(gen->Poisson((double) 16000)*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
 		ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
-		showerScint.push_back(16000*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
+		showerScint.push_back(gen->Poisson((double)16000)*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
  		showerAction1d(inShower,93.11,(double) i, false); //Shower after 1 radiation length
 	}
 
@@ -241,7 +241,7 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	std::vector<double> inputE = linspace(500,3000,6);
+	std::vector<double> inputE = logspace(100,3000,20);
 	std::vector<double> sumScintPhoto;
 
 	//long testPhoton = scintShower(25,E0,11);
@@ -249,9 +249,9 @@ int main(){
 
 	//Full code Starts here
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_3.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_5.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
-	//TRandom3 *randGen = new TRandom3();
+	TRandom3 *randGen = new TRandom3();
 
 	//Add vector of energies to the ROOT file
 	f1->WriteObject(&inputE,"Initial_E");
@@ -267,8 +267,8 @@ int main(){
 		std::vector<int> showerVec_elec, showerVec_pos, totalVec; 
 		std::vector<int> showerVecArr[2];
 		
-		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,93.11); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
-		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,93.11); //Positron Shower
+		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,93.11,randGen); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
+		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,93.11,randGen); //Positron Shower
 
 		t1.join();
 		t2.join();
@@ -302,6 +302,7 @@ int main(){
 	} //Fill Scintilaiton photon vector
 	
 
+	delete randGen;
 	f1->Close();
 	//delete f1;
 
