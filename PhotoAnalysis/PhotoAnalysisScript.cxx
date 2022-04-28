@@ -113,7 +113,7 @@ void showerPlot(TFile *f, double EVal, bool verbose = false){
 
 int main(){
 	std::cout << "Test" << std::endl; 
-	TFile *f = TFile::Open("ScintPhotoOut_HomogTest_5.root","READ");
+	TFile *f = TFile::Open("ScintPhotoOut_HomogTest_6.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
 

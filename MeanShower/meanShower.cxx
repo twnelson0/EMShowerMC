@@ -87,7 +87,8 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 
 		//Photon Interactions
 		if(inShower.idVec.at(i - showPart) == 22){
-			if (incEnergy>= 2*m_e && ceil(crntRadLen) == floor(crntRadLen)){ //Pair production
+			//if (incEnergy>= 2*m_e && ceil(crntRadLen) == floor(crntRadLen)){ //Pair production
+			if (incEnergy>= 2*m_e){ //Pair production
 				if (verbose) std::cout << "Pair production" << std::endl;
 
 				//Electron
@@ -110,7 +111,8 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 
 		//Lepton Interactions
 		else if (inShower.idVec.at(i - showPart) == 11 || inShower.idVec.at(i - showPart) == -11){
-			if (incEnergy >= E_Crit && ceil(crntRadLen) == floor(crntRadLen)){ //Bremsstralung
+			//if (incEnergy >= E_Crit && ceil(crntRadLen) == floor(crntRadLen)){ //Bremsstralung
+			if (incEnergy >= E_Crit){ //Bremsstralung
 				if (verbose) std::cout << "Lepton Interaction" << std::endl;
 				//Lepton
 				inShower.idVec.push_back(inShower.idVec.at(i - showPart));
@@ -241,7 +243,7 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	std::vector<double> inputE = logspace(100,3000,20);
+	std::vector<double> inputE = logspace(500,5000,ceil(log(50)/log(2)));
 	std::vector<double> sumScintPhoto;
 
 	//long testPhoton = scintShower(25,E0,11);
@@ -249,7 +251,7 @@ int main(){
 
 	//Full code Starts here
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_5.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_6.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	TRandom3 *randGen = new TRandom3();
 
