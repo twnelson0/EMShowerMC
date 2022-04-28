@@ -93,14 +93,14 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 				//Electron
 				inShower.idVec.push_back(11);
 				inShower.EVec.push_back(incEnergy*0.5);
-				inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
-				inShower.thetaVec.push_back(0);
+				//inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
+				//inShower.thetaVec.push_back(0);
 
 				//Positron
 				inShower.idVec.push_back(-11);
 				inShower.EVec.push_back(incEnergy*0.5);
-				inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
-				inShower.thetaVec.push_back(0);
+				//inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
+				//inShower.thetaVec.push_back(0);
 
 				inShower.clearParticle(i - showPart); 
 				showPart+=1; //Increment number of incident showering particles by 1
@@ -115,14 +115,14 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 				//Lepton
 				inShower.idVec.push_back(inShower.idVec.at(i - showPart));
 				inShower.EVec.push_back(incEnergy*0.5);
-				inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
-				inShower.thetaVec.push_back(0);
+				//inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
+				//inShower.thetaVec.push_back(0);
 
 				//Photon
 				inShower.idVec.push_back(22);
 				inShower.EVec.push_back(incEnergy*0.5);
-				inShower.pVec.push_back(incEnergy*0.5);
-				inShower.thetaVec.push_back(0);
+				//inShower.pVec.push_back(incEnergy*0.5);
+				//inShower.thetaVec.push_back(0);
 
 				inShower.clearParticle(i - showPart); 
 				showPart+=1; //Increment number of incident showering particles by 1
@@ -204,8 +204,9 @@ void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit,
 		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
 		if (nChargeTrack == 0) break; //End shower if there are no more charged particles
 		//std::cout << "Track Length between " << i << " and " << ++i << " = " << layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1)) << std::endl;
-		showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
-		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
+		//showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
+		showerScint.push_back(16000*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
+ 		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
 	}
 
 	//return showerScint;
@@ -227,14 +228,14 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	std::vector<double> inputE = linspace(500,5000,10);
+	std::vector<double> inputE = linspace(500,3000,6);
 	std::vector<double> sumScintPhoto;
 
 	//long testPhoton = scintShower(25,E0,11);
 	//std::cout << testPhoton << std::endl;
 
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut_FixedECrit.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_1.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	//TRandom3 *randGen = new TRandom3();
 

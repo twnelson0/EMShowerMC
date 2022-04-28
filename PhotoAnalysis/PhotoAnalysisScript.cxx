@@ -38,6 +38,15 @@ std::map<double, int> EToIndx(TFile *f1){
 	return outMap;
 }
 
+//Energy Estmimation
+/*double EnergyReco_1(int totalNGamma){
+	double EHat;
+	/*
+	Use simple algorithm, number of particles = 2^N
+	Get a fraction of particles that are charged leptons
+	
+}*/
+
 //Sum Photons for a given energy value
 int photoSum(TFile *f, double EVal){
 	int sumVal = 0;
@@ -69,8 +78,8 @@ void showerPlot(TFile *f, double EVal){
 
 	//Obtain the TSTrings and vector name in file
 	TString vecName, graphTitle,fileName; vecName.Form("Shower_%d",eMap[EVal]);
-	graphTitle.Form("%.1lf GeV Event",EVal*2);
-	fileName.Form("%.1lfGeVEventPhotoPlot.png",EVal*2);
+	graphTitle.Form("%.0lf GeV Event",EVal*2);
+	fileName.Form("%.0lfGeVEventPhotoPlot.png",EVal*2);
 	std::vector<int> *EVec;
 	f->GetObject(vecName,EVec);
 	
@@ -101,7 +110,7 @@ void showerPlot(TFile *f, double EVal){
 
 int main(){
 	std::cout << "Test" << std::endl; 
-	TFile *f = TFile::Open("ScintPhotoOut_FixedECrit.root","READ");
+	TFile *f = TFile::Open("ScintPhotoOut_HomogTest_1.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
 
@@ -114,19 +123,19 @@ int main(){
 	std::vector<double> sumPhotVec;
 	std::vector<double> energyVec;
 	//Get Sum of Photons Vector
-	for (int i = 0; i < 10; i++){
+	for (int i = 0; i < 6; i++){
 		sumPhotVec.push_back((double) photoSum(f,500. + i*500.));
 		energyVec.push_back((500. + 500.*i)*2);
 	}
 
 	//Make the plot
 	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
-	TGraph *g1 = new TGraph(10,&(energyVec[0]),&(sumPhotVec[0]));
+	TGraph *g1 = new TGraph(6,&(energyVec[0]),&(sumPhotVec[0]));
 	g1->SetTitle("LLP Energy Vs. Total Number of Scintillationion Photons");
 	g1->GetXaxis()->SetTitle("LLP Energy (GeV)");
 	g1->GetYaxis()->SetTitle("Sum of Scintillation Photons");
 	g1->Draw("A*");
-	c1->SaveAs("ScintPhotoSumPlot.png");
+	c1->SaveAs("ScintPhotoSumPlot_Homog1.png");
 
 	delete g1;
 	c1->Close();

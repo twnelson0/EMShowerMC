@@ -63,8 +63,8 @@ public:
 	showerR2(particleR2 incPart){
 		idVec.push_back(incPart.id());
 		EVec.push_back(incPart.E());
-		thetaVec.push_back(incPart.theta());
-		pVec.push_back(incPart.p());
+		//thetaVec.push_back(incPart.theta());
+		//pVec.push_back(incPart.p());
 	}
 
 	int showerSize(){return this->idVec.size();}
@@ -94,8 +94,8 @@ public:
 	void printPart(int i){
 		std::cout << "Particle = " << this->idVec.at(i) << std::endl;
 		std::cout << "Energy = " << this->EVec.at(i) << std::endl;
-		std::cout << "Angle = " << this->thetaVec.at(i) << std::endl;
-		std::cout << "Momenta = " << this->pVec.at(i) << std::endl;
+		//std::cout << "Angle = " << this->thetaVec.at(i) << std::endl;
+		//std::cout << "Momenta = " << this->pVec.at(i) << std::endl;
 	}
 
 
@@ -103,8 +103,8 @@ public:
 	void clearParticle(int partIndx){
 		this->idVec.erase(this->idVec.begin() + partIndx);
 		this->EVec.erase(this->EVec.begin() + partIndx);
-		this->thetaVec.erase(this->thetaVec.begin() + partIndx);
-		this->pVec.erase(this->pVec.begin() + partIndx);
+		//this->thetaVec.erase(this->thetaVec.begin() + partIndx);
+		//this->pVec.erase(this->pVec.begin() + partIndx);
 	}
 
 	//Print all the particles
@@ -120,8 +120,8 @@ public:
 	//Public varaibles
 	std::vector<int> idVec;
 	std::vector<double> EVec;
-	std::vector<double> thetaVec;
-	std::vector<double> pVec;
+	//std::vector<double> thetaVec;
+	//std::vector<double> pVec;
 
 /*private:
 	std::vector<auto>[4] vectorAray; //Array of shower atribute vectors
