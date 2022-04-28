@@ -69,7 +69,7 @@ int photoSum(TFile *f, double EVal){
 
 
 //Generate and Save singal shower Graph
-void showerPlot(TFile *f, double EVal){
+void showerPlot(TFile *f, double EVal, bool verbose = false){
 	//ROOT Objects
 	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
 
@@ -82,6 +82,7 @@ void showerPlot(TFile *f, double EVal){
 	fileName.Form("%.0lfGeVEventPhotoPlot.png",EVal*2);
 	std::vector<int> *EVec;
 	f->GetObject(vecName,EVec);
+	if (verbose) std::cout << vecName << std::endl;
 	
 	//Vectors/Arrays for graph
 	std::vector<double> radLenVec, photoVec;
@@ -90,6 +91,7 @@ void showerPlot(TFile *f, double EVal){
 	for (std::vector<int>::iterator it = EVec->begin(); it != EVec->end(); it++){
 		radLenVec.push_back((double)radLenVal);
 		photoVec.push_back((double) *it);
+		if (verbose) {std::cout << *it << std::endl;}
 		radLenVal++;
 	}
 	
@@ -98,6 +100,7 @@ void showerPlot(TFile *f, double EVal){
 	g1->SetTitle(graphTitle);
 	g1->GetXaxis()->SetTitle("Radiation Lengths Traversed (X_{0})");
 	g1->GetYaxis()->SetTitle("Number of Scintillation Photons");
+	c1->SetLogy();
 	g1->Draw("A*");
 	c1->SaveAs(fileName);
 
@@ -110,7 +113,7 @@ void showerPlot(TFile *f, double EVal){
 
 int main(){
 	std::cout << "Test" << std::endl; 
-	TFile *f = TFile::Open("ScintPhotoOut_HomogTest_1.root","READ");
+	TFile *f = TFile::Open("ScintPhotoOut_HomogTest_3.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
 
@@ -118,24 +121,31 @@ int main(){
 		std::cout << p.first << " --> " << p.second << std::endl;
 	}*/
 
-	showerPlot(f,500);
+	//showerPlot(f,500);
 
 	std::vector<double> sumPhotVec;
 	std::vector<double> energyVec;
 	//Get Sum of Photons Vector
-	for (int i = 0; i < 6; i++){
+	for (int i = 0; i < EMap.size(); i++){
 		sumPhotVec.push_back((double) photoSum(f,500. + i*500.));
+		std::cout << sumPhotVec.at(i) << std::endl;
 		energyVec.push_back((500. + 500.*i)*2);
+	}
+
+	//Get all the shower plot 
+	for (double E : energyVec){
+		if (E == 1000 || E == 3000) showerPlot(f,E/2,true);
+		else showerPlot(f,E/2);
 	}
 
 	//Make the plot
 	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
-	TGraph *g1 = new TGraph(6,&(energyVec[0]),&(sumPhotVec[0]));
+	TGraph *g1 = new TGraph(EMap.size(),&(energyVec[0]),&(sumPhotVec[0]));
 	g1->SetTitle("LLP Energy Vs. Total Number of Scintillationion Photons");
 	g1->GetXaxis()->SetTitle("LLP Energy (GeV)");
 	g1->GetYaxis()->SetTitle("Sum of Scintillation Photons");
 	g1->Draw("A*");
-	c1->SaveAs("ScintPhotoSumPlot_Homog1.png");
+	c1->SaveAs("ScintPhotoSumPlot_Homog3.png");
 
 	delete g1;
 	c1->Close();

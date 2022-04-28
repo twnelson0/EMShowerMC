@@ -153,6 +153,17 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double crntRadLen, bool v
 	}
 }
 
+
+//Ionization energy loss due to traversal
+void ionELoss(showerR2 &inShower, double startRadLen, double endRadLen){
+	int inCount = inShower.showerSize();
+	for (int i = 0; i < inCount; i++){
+		if (abs(inShower.idVec.at(i)) == 11){ //Ionization loss for leptons only
+			inShower.EVec.at(i) -= 2.502*(endRadLen - startRadLen);//Homogenous only
+		} 
+	}
+}
+
 //Shower for full LLP event consisting of 2 particles
 //void showerAction_Full(std::vector<>, double E_Crit, double crntRadLen, bool verbose = false){
 	
@@ -204,9 +215,11 @@ void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit,
 		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
 		if (nChargeTrack == 0) break; //End shower if there are no more charged particles
 		//std::cout << "Track Length between " << i << " and " << ++i << " = " << layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1)) << std::endl;
+		
 		//showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
+		ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
 		showerScint.push_back(16000*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
- 		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
+ 		showerAction1d(inShower,93.11,(double) i, false); //Shower after 1 radiation length
 	}
 
 	//return showerScint;
@@ -234,8 +247,9 @@ int main(){
 	//long testPhoton = scintShower(25,E0,11);
 	//std::cout << testPhoton << std::endl;
 
+	//Full code Starts here
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_1.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_3.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	//TRandom3 *randGen = new TRandom3();
 
@@ -285,15 +299,13 @@ int main(){
 		f1->WriteObject(&totalVec,crntName); //Write current Vector
 		showerNum++;
 		//for (int phot : totalVec){std::cout << phot << std::endl;}
-
-		//Combine the scintilations photons into 1 vector
-		/*for (int i = 0; i < showerVec.size(); i++){photoSum += (double)showerVec.at(i);}
-		sumScintPhoto.push_back(photoSum);*/
 	} //Fill Scintilaiton photon vector
 	
 
 	f1->Close();
 	//delete f1;
+
+	//Informal Debugging
 	
 	//Loop over the total scintilation photon vector
 	//for (double v : sumScintPhoto){std::cout << v << std::endl;}
@@ -352,7 +364,7 @@ int main(){
 		//inShower.showerDump();
 		//if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
 		//else showerAction1d(inShower, 5, (double) t);
-		showerAction1d(inShower, 5, (double) t, false);
+		showerAction1d(inShower, , (double) t, false);
 		if (nChargeTrack == 0) {std::cout << "Ending Shower" << std::endl; break;} //End shower
 
 		//Check energy conservation 
@@ -360,7 +372,7 @@ int main(){
 		
 
 		double nGamma = 0; //Number of Scintilation photons
-		nGamma = 16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack;
+		//nGamma = 16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack;
 		//if (t == 0) timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e)); //First track
 		//else timeStampVec.push_back(timeStampVec.at(t - 1) + radLen2Time(1,E0/pow(2,t),m_e));
 		leptVec.push_back((double) nChargeTrack);

@@ -33,12 +33,16 @@ int main(){
 	//std::cout << crntLayer(0.4) << std::endl;
 	//std::cout << *layer << " and " << *(layer + 1) << std::endl;
 	double scintLenSum = 0;
+	double leadLenSum = 0;
 	for (int i = 0; i < 25; i++){
+		leadLenSum += trackLen_pb(radLen2Long((double) i), radLen2Long((double) (i + 1)));
 		scintLenSum += trackLen_scint(radLen2Long((double)i),radLen2Long((double)(i + 1)));
 		//std::cout << "Segment #" << i << " = " << trackLen_scint(radLen2Long((double)i),radLen2Long((double)(i + 1))) << std::endl;
 	}
 
 	std::cout << scintLenSum << std::endl;
+	std::cout << leadLenSum << std::endl;
+	std::cout << scintLenSum + leadLenSum << std::endl;
 
 
 	//delete[] layer;

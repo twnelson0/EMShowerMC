@@ -134,7 +134,7 @@ double layerTrackLen_pb(double edgeVal, bool start){
 }
 
 double trackLen_pb(double startPoint, double endPoint){
-	double *startLayer = new double[2];
+	/*double *startLayer = new double[2];
 	double *endLayer = new double[2];
 	startLayer = layerTerminus(startPoint); //Get first Layer information
 	endLayer = layerTerminus(endPoint); //Get Ending Layer information
@@ -150,9 +150,10 @@ double trackLen_pb(double startPoint, double endPoint){
 	trackLen += layerTrackLen_pb(endPoint, false);
 
 	delete [] startLayer;
-	delete [] endLayer;
+	delete [] endLayer;*/
+	//double trackLen, trackLenScint;
 
-	return trackLen;
+	return (endPoint - startPoint) - trackLen_scint(startPoint,endPoint); //Use scintilation track length to get lead track len
 }
 
 
