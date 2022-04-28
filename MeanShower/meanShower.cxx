@@ -205,7 +205,7 @@ std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVa
 
 
 //Shower and record total number of scintilation photons produced (Multithreaded)
-void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal, TRandom3 *gen){
+void scintShower_Thread(std::vector<double> &showerScint, int maxLen, double Einit, int partId, double critVal){
 	//std::vector<int> showerScint; //Number of scintilation photons
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
@@ -220,7 +220,7 @@ void scintShower_Thread(std::vector<int> &showerScint, int maxLen, double Einit,
 		
 		//showerScint.push_back(gen->Poisson((double) 16000)*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
 		ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
-		showerScint.push_back(gen->Poisson((double)16000)*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
+		showerScint.push_back((39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
  		showerAction1d(inShower,93.11,(double) i, false); //Shower after 1 radiation length
 	}
 
@@ -263,14 +263,20 @@ int main(){
 	for ( double E : inputE) {
 		TString crntName; crntName.Form("Shower_%d",showerNum);
 		std::cout << "E = " << E << " GeV" << std::endl;
+
+		//Get stopping length from the analytic model
+		double stopX0 = log(E*1e3/93.11)/log(2);
+		double stopLen = radLen2Long(stopX0);
+
 		//Create 2 threads for each input particle
 		//std::thread t1,t2;
 		double photoSum = 0;
-		std::vector<int> showerVec_elec, showerVec_pos, totalVec; 
-		std::vector<int> showerVecArr[2];
+		std::vector<double> showerVec_elec, showerVec_pos; 
+		std::vector<double> totalVec; 
+		std::vector<double> showerVecArr[2];
 		
-		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,93.11,randGen); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
-		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,93.11,randGen); //Positron Shower
+		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,93.11); //,randGen); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
+		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,93.11); //,randGen); //Positron Shower
 
 		t1.join();
 		t2.join();
@@ -290,6 +296,23 @@ int main(){
 			showerVecArr[0] = showerVec_elec;
 			showerVecArr[1] = showerVec_pos;
 		}
+
+		//Make scintilation photon adjustments to each shower
+		double diffArr[2]; //diff0, diff1;
+		double scintDiffArr[2]; //scintDiff0, scintDiff1;
+		for (int i = 0; i < 2; i++) {
+			diffArr[i] = stopX0 - (((double) showerVecArr[i].size()) - 1);
+			std::cout << diffArr[i] << std::endl;
+			//scintDiffArr[i] = showerVecArr[i].at(showerVecArr[i].size() - 1) + diffArr[i]; //!!!YOU CAN'T DO IT HERE IT WILL FUCK THINGS UP!!!
+		}
+
+		//Get the number of photons for each shower
+		/*for (int i = 0; i < 2; i++){
+			for (int j = 0; j < showerVecArr[i].size(); j++){
+				showerVecArr.at(j)
+			}
+		}*/
+
 		
 		//if (showerVec_pos.size() != showerVec_elec.size()) std::cout <<"size difference" << std::endl;
 
