@@ -63,6 +63,7 @@ public:
 	showerR2(particleR2 incPart){
 		idVec.push_back(incPart.id());
 		EVec.push_back(incPart.E());
+		locVec.push_back(0); //Push back particle location
 		//thetaVec.push_back(incPart.theta());
 		//pVec.push_back(incPart.p());
 	}
@@ -103,6 +104,7 @@ public:
 	void clearParticle(int partIndx){
 		this->idVec.erase(this->idVec.begin() + partIndx);
 		this->EVec.erase(this->EVec.begin() + partIndx);
+		this->locVec.erase(this->locVec.begin() + partIndx);
 		//this->thetaVec.erase(this->thetaVec.begin() + partIndx);
 		//this->pVec.erase(this->pVec.begin() + partIndx);
 	}
@@ -120,6 +122,7 @@ public:
 	//Public varaibles
 	std::vector<int> idVec;
 	std::vector<double> EVec;
+	std::vector<double> locVec;
 	//std::vector<double> thetaVec;
 	//std::vector<double> pVec;
 
