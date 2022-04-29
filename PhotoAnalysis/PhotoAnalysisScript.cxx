@@ -186,7 +186,7 @@ void showerEnergyPlotHomog(TFile *f){
 	c1->Close();
 }
 
-void activeGeo(TFile *f){
+/*void activeGeo(TFile *f){
 	std::vector<double> *activeLayers;
 	double sumVal = 0;
 	f->GetObject("ActiveGeo",activeLayers);
@@ -197,12 +197,12 @@ void activeGeo(TFile *f){
 	}
 
 	std::cout << "Sum = " << sumVal << std::endl;
-}
+}*/
 
 
 int main(){
 	std::cout << "Test" << std::endl; 
-	TFile *f = TFile::Open("ScintPhotoOut_Sample_Final_NoPoisson.root","READ");
+	TFile *f = TFile::Open("ScintPhotoOut_Homogenous_Final_NoPoisson.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
 
@@ -229,7 +229,7 @@ int main(){
 		showerPartPlot(f,mapPair.first);
 	}
 
-	activeGeo(f);
+	//activeGeo(f);
 
 	//Make the plot
 	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
