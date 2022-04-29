@@ -92,7 +92,7 @@ void showerScintPlot(TFile *f, double EVal, bool verbose = false){
 	for (std::vector<int>::iterator it = EVec->begin(); it != EVec->end(); it++){
 		radLenVec.push_back((double)radLenVal);
 		photoVec.push_back((double) *it);
-		//if (verbose) {std::cout << *it << std::endl;}
+		if (verbose) {std::cout << *it << std::endl;}
 		radLenVal++;
 	}
 	
@@ -184,7 +184,19 @@ void showerEnergyPlotHomog(TFile *f){
 	//Memory
 	delete g1;
 	c1->Close();
+}
 
+void activeGeo(TFile *f){
+	std::vector<double> *activeLayers;
+	double sumVal = 0;
+	f->GetObject("ActiveGeo",activeLayers);
+
+	for (std::vector<double>::iterator it = activeLayers->begin(); it != activeLayers->end(); it++){
+		std::cout << *(it) << std::endl;
+		sumVal += *(it);
+	}
+
+	std::cout << "Sum = " << sumVal << std::endl;
 }
 
 
@@ -214,8 +226,10 @@ int main(){
 		/*if (E == 1000 || E == 3000) showerScintPlot(f,E/2,true);
 		else showerScintPlot(f,E/2);*/
 		showerScintPlot(f,mapPair.first,true);
-		showerPartPlot(f,mapPair.first,true);
+		showerPartPlot(f,mapPair.first);
 	}
+
+	activeGeo(f);
 
 	//Make the plot
 	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
