@@ -23,24 +23,6 @@
 using namespace physConstants; //Physical constants from MatterCalc.h
 
 
-/*
-Outline
-	* In this simplified model I will consider incident e-e+ particles on the calorimeter from the decay volume
-	* Since these are the product of the decay of LLPs where in the decay volume they originate will be a exponentially random value with average of LLP lifetime
-	* The angle of incidence of the LLP (and therefore the e+e-) will be a uniformly generated value within FASERs 2mrad acceptance
-	* After each radiation length a given particle will lose half its energy
-	* After 1 rad len a charged lepton will yield a photon and a charged lepton (Bremstralung)
-	* After 1 rad len a photon will yield an electron positron pair (Pair production with nuclei really)
-	* In principle pair production of photons should only happen every 9/7 Rad Len
-	* In principle process for leptons stops at E_c and process stops for photons when E < 2m_e
-	* When particles split I'm not sure how to handle direction, in principle if I consider a psudo 1d model all that matters is that energy splits in 2 mometa and location in detector irelevent
-	* Negate more detailed interactions
-	* In more detailed simulation when interaction occurs and resultent energies and directions should be more accuretly obtained from process cross section
-
-Magnets will pull them apart
-
-*/
-
 //Obtain Energy loss due to ionizaiton assuming MIP over a given range 
 double ionizationLoss(double E0, double startVal, double endVal){
 	double ELoss;
@@ -364,7 +346,7 @@ int main(){
 		totalVecPart = showerVecPartArr[0];
 		for (int i = 0; i < showerVecPartArr[1].size(); i++){totalVecPart.at(i) = totalVecPart.at(i) + showerVecPartArr[1].at(i);}
 		//for (int i = 0; i < showerVecScint_elec.size(); i++){totalVecScint.push_back(showerVecScint_elec.at(i) + showerVecScint_pos.at(i));}
-		
+
 		//Write current vectors
 		f1->WriteObject(&totalVecScint,crntNameScintPhoto); 
 		f1->WriteObject(&totalVecPart,crntNameTotalPart); 
@@ -373,6 +355,13 @@ int main(){
 		//for (int phot : totalVec){std::cout << phot << std::endl;}
 	} //Fill Scintilaiton photon vector
 	
+	//Store Active and Passive Laye information
+	std::vector<double> activeVec;
+	std::vector<double> passiveVec;
+	for (int i = 0; i < 25; i++){activeVec.push_back(layerTrackLen_scint((double) i, (double) i + 1));passiveVec.push_back(layerTrackLen_pb((double) i, (double) i + 1));}
+
+	f1->WriteObject(&activeVec,"ActiveGeo");
+	f1->WriteObject(&passiveVec,"PassiveGeo");
 
 	delete randGen;
 	f1->Close();
