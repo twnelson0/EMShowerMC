@@ -65,7 +65,6 @@ double ionizationLoss(double E0, double startVal, double endVal){
 	ELoss += rho_scint*2*layerTrackLen_scint(endVal,false);
 
 	return ELoss;
-
 }
 
 //Second version of the 1 dimeinsional showering function with hopefully less memory problems
@@ -205,7 +204,7 @@ std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVa
 
 
 //Shower and record total number of scintilation photons produced (Multithreaded)
-void scintShower_Thread(std::vector<double> &showerScint, int maxLen, double Einit, int partId, double critVal){
+void scintShower_Thread_Scint(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal){
 	//std::vector<int> showerScint; //Number of scintilation photons
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
@@ -220,11 +219,34 @@ void scintShower_Thread(std::vector<double> &showerScint, int maxLen, double Ein
 		
 		//showerScint.push_back(gen->Poisson((double) 16000)*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
 		ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
-		showerScint.push_back((39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
+		showerScint.push_back(16000*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
  		showerAction1d(inShower,93.11,(double) i, false); //Shower after 1 radiation length
 	}
 
 	//return showerScint;
+}
+
+
+//Shower and record total number of scintilation photons produced and store information about the number of particles produced (Multithreaded)
+void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &partNum, int maxLen, double Einit, int partId, double critVal, TRandom3 *gen){
+	//std::vector<int> showerScint; //Number of scintilation photons
+	std::cout << "Starting Single Shower" << std::endl;
+	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
+	showerR2 inShower = showerR2(initPart); //Set up shower object
+
+	//Shower through the calorimter
+	for (int i = 0; i < maxLen; i++){
+		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
+		if (nChargeTrack == 0) break; //End shower if there are no more charged particles
+		//std::cout << "Track Length between " << i << " and " << ++i << " = " << layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1)) << std::endl;
+		
+		//showerScint.push_back(gen->Poisson((double) 16000)*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
+		ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
+		//showerScint.push_back(gen->Poisson((double) 16000*(39.6/25)*nChargeTrack)*0.12*0.15); //Homogenous Cal with Poission Fluctuations
+		showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Sampling Cal with No
+		partNum.push_back(inShower.showerSize());
+ 		showerAction1d(inShower,93.11,(double) i, false); //Shower after 1 radiation length
+	}
 }
 
 
@@ -243,7 +265,7 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	std::vector<double> inputE = logspace(500,5000,ceil(log(50)/log(2)));
+	std::vector<double> inputE = linspace(500,5000,10);
 	std::vector<double> sumScintPhoto;
 
 	//long testPhoton = scintShower(25,E0,11);
@@ -251,7 +273,7 @@ int main(){
 
 	//Full code Starts here
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut_HomogTest_6.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_Sample_Final_NoPoisson.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	TRandom3 *randGen = new TRandom3();
 
@@ -261,7 +283,8 @@ int main(){
 
 	//Loop over all incident particle energies
 	for ( double E : inputE) {
-		TString crntName; crntName.Form("Shower_%d",showerNum);
+		TString crntNameScintPhoto; crntNameScintPhoto.Form("Shower_%d",showerNum);
+		TString crntNameTotalPart; crntNameTotalPart.Form("PartNum_%d",showerNum);
 		std::cout << "E = " << E << " GeV" << std::endl;
 
 		//Get stopping length from the analytic model
@@ -271,57 +294,81 @@ int main(){
 		//Create 2 threads for each input particle
 		//std::thread t1,t2;
 		double photoSum = 0;
-		std::vector<double> showerVec_elec, showerVec_pos; 
-		std::vector<double> totalVec; 
-		std::vector<double> showerVecArr[2];
-		
-		std::thread t1(scintShower_Thread,std::ref(showerVec_elec),25,E*1e3,11,93.11); //,randGen); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
-		std::thread t2(scintShower_Thread,std::ref(showerVec_pos),25,E*1e3,-11,93.11); //,randGen); //Positron Shower
+		std::vector<int> showerVecScint_elec, showerVecScint_pos,totalVecScint; //Scintilation Photon Vectors
+		std::vector<int> showerVecPart_elec, showerVecPart_pos,totalVecPart; //Total number of particles
+		std::vector<int> showerVecScintArr[2]; //
+		std::vector<int> showerVecPartArr[2]; //
+
+		std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),25,E*1e3,11,93.11,randGen);
+		std::thread t2(scintShower_Thread_Full,std::ref(showerVecScint_pos),std::ref(showerVecPart_pos),25,E*1e3,11,93.11,randGen);
 
 		t1.join();
 		t2.join();
+		
+		/*
+		//Only getting scintilation photon energy
+		std::thread t1(scintShower_Thread_Scint,std::ref(showerVecScint_elec),25,E*1e3,11,93.11); //,randGen); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
+		std::thread t2(scintShower_Thread_Scint,std::ref(showerVecScint_pos),25,E*1e3,-11,93.11); //,randGen); //Positron Shower
+
+		t1.join();
+		t2.join();
+		*/
 
 		//Single Threading
-		//scintShower_Thread(showerVec_elec,25,E,11,5);
-		//scintShower_Thread(showerVec_pos,25,E,-11,5);
+		//scintShower_Thread(showerVecScint_elec,25,E,11,5);
+		//scintShower_Thread(showerVecScint_pos,25,E,-11,5);
 
 		//Update the shower vector array with the first index benig the largest vector
-		if (showerVec_elec.size() > showerVec_pos.size()){
-			showerVecArr[0] = showerVec_elec;
-			showerVecArr[1] = showerVec_pos;
-		}else if (showerVec_elec.size() < showerVec_pos.size()){
-			showerVecArr[0] = showerVec_pos;
-			showerVecArr[1] = showerVec_elec;
-		}else if (showerVec_elec.size() == showerVec_pos.size()){
-			showerVecArr[0] = showerVec_elec;
-			showerVecArr[1] = showerVec_pos;
+		if (showerVecScint_elec.size() > showerVecScint_pos.size()){
+			showerVecScintArr[0] = showerVecScint_elec;
+			showerVecScintArr[1] = showerVecScint_pos;
+			showerVecPartArr[0] = showerVecPart_elec;
+			showerVecPartArr[1] = showerVecPart_pos;
+		}else if (showerVecScint_elec.size() < showerVecScint_pos.size()){
+			showerVecScintArr[0] = showerVecScint_pos;
+			showerVecScintArr[1] = showerVecScint_elec;
+			showerVecPartArr[0] = showerVecPart_pos;
+			showerVecPartArr[1] = showerVecPart_elec;
+		}else if (showerVecScint_elec.size() == showerVecScint_pos.size()){
+			showerVecScintArr[0] = showerVecScint_elec;
+			showerVecScintArr[1] = showerVecScint_pos;
+			showerVecPartArr[0] = showerVecPart_elec;
+			showerVecPartArr[1] = showerVecPart_pos;
 		}
 
 		//Make scintilation photon adjustments to each shower
-		double diffArr[2]; //diff0, diff1;
+		/*double diffArr[2]; //diff0, diff1;
 		double scintDiffArr[2]; //scintDiff0, scintDiff1;
 		for (int i = 0; i < 2; i++) {
-			diffArr[i] = stopX0 - (((double) showerVecArr[i].size()) - 1);
+			diffArr[i] = stopX0 - (((double) showerVecScintArr[i].size()) - 1);
 			std::cout << diffArr[i] << std::endl;
-			//scintDiffArr[i] = showerVecArr[i].at(showerVecArr[i].size() - 1) + diffArr[i]; //!!!YOU CAN'T DO IT HERE IT WILL FUCK THINGS UP!!!
-		}
+			//scintDiffArr[i] = showerVecScintArr[i].at(showerVecScintArr[i].size() - 1) + diffArr[i];
+		}*/
 
 		//Get the number of photons for each shower
 		/*for (int i = 0; i < 2; i++){
-			for (int j = 0; j < showerVecArr[i].size(); j++){
-				showerVecArr.at(j)
+			for (int j = 0; j < showerVecScintArr[i].size(); j++){
+				showerVecScintArr.at(j)
 			}
 		}*/
 
 		
-		//if (showerVec_pos.size() != showerVec_elec.size()) std::cout <<"size difference" << std::endl;
+		//if (showerVecScint_pos.size() != showerVecScint_elec.size()) std::cout <<"size difference" << std::endl;
 
 		//scintShower(25,E*1e3,11); //Old single threaded shower
 		//Get total number of scintilation photons for a LLP event
-		totalVec = showerVecArr[0];
-		for (int i = 0; i < showerVecArr[1].size(); i++){totalVec.at(i) = totalVec.at(i) + showerVecArr[1].at(i);}
-		//for (int i = 0; i < showerVec_elec.size(); i++){totalVec.push_back(showerVec_elec.at(i) + showerVec_pos.at(i));}
-		f1->WriteObject(&totalVec,crntName); //Write current Vector
+		totalVecScint = showerVecScintArr[0];
+		for (int i = 0; i < showerVecScintArr[1].size(); i++){totalVecScint.at(i) = totalVecScint.at(i) + showerVecScintArr[1].at(i);}
+
+		//Get total number of particles for a LLP event
+		totalVecPart = showerVecPartArr[0];
+		for (int i = 0; i < showerVecPartArr[1].size(); i++){totalVecPart.at(i) = totalVecPart.at(i) + showerVecPartArr[1].at(i);}
+		//for (int i = 0; i < showerVecScint_elec.size(); i++){totalVecScint.push_back(showerVecScint_elec.at(i) + showerVecScint_pos.at(i));}
+		
+		//Write current vectors
+		f1->WriteObject(&totalVecScint,crntNameScintPhoto); 
+		f1->WriteObject(&totalVecPart,crntNameTotalPart); 
+		
 		showerNum++;
 		//for (int phot : totalVec){std::cout << phot << std::endl;}
 	} //Fill Scintilaiton photon vector
@@ -463,17 +510,3 @@ int main(){
 	//delete gCharge;
 	//delete c1;
 }
-
-
-
-/*
-I don't understand how to get energy deposited from this simple simulation, I get that the fractional energy deposited will increase but early on since I am halving the particles isn't 
-no energy going to be deposited until the charged tracks start scintillating?
-I am also a bit confused about when scintilation starts
-
-CUrrently confused on the followng:
-*How to simulate scintilation photons
-*How to get energy depoosited per distance traveled (the two should be related)
-*Do I need to consider energy loss that beyond mean bremstrahulng when simulating early part of the shower
-*Attenuation of the shower towards the end No idea where to even start with this
-*/
