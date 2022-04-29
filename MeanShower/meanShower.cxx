@@ -59,6 +59,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 		double partTheta,partP;
 		double incEnergy = inShower.EVec.at(i - showPart);
 		double crntLoc = inShower.locVec.at(i);
+		double disp, newPos;
 
 		/*if (verbose){
 			std::cout << "Shower Dump #" << i << std::endl;
@@ -72,11 +73,13 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 			//if (incEnergy>= 2*m_e && ceil(crntRadLen) == floor(crntRadLen)){ //Pair production
 			if (incEnergy>= 2*m_e){ //Pair production
 				if (verbose) std::cout << "Pair production" << std::endl;
-				newPos = crntLoc + randGen->exp(pow(radLen*9/7)); //Particle decays at random location
+				disp = randGen->Exp(radLen*9/7);//Distance particle travels before undergoing an interaction
+				newPos = crntLoc + disp; //Location of decay
 
-				if (newPos >= radLen2Long(25)) {inShower.clearParticle(i - showPart);} //Particle outside detector attenuate it
+				if (newPos >= radLen2Long(25)) {inShower.clearParticle(i - showPart); if (verbose) std::cout << "Outisde Cal" << std::endl;} //Particle outside cal attenuate it
 				else{
 					//Electron
+					inShower.diffLocVec.push_back(disp);
 					inShower.locVec.push_back(newPos); 
 					inShower.idVec.push_back(11);
 					inShower.EVec.push_back(incEnergy*0.5);
@@ -84,15 +87,17 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 					//inShower.thetaVec.push_back(0);
 
 					//Positron
+					inShower.diffLocVec.push_back(disp);
+					inShower.locVec.push_back(newPos);
 					inShower.idVec.push_back(-11);
 					inShower.EVec.push_back(incEnergy*0.5);
 					//inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
 					//inShower.thetaVec.push_back(0);
 
 					inShower.clearParticle(i - showPart); 
-					showPart+=1; //Increment number of incident showering particles by 1
-
+					//showPart+=1; //Increment number of incident showering particles by 1
 				}
+				showPart+=1; //Increment number of incident showering particles by 1
 
 			}else if (incEnergy < 2*m_e){ if (verbose) {std::cout << "No longer pair producing" << std::endl;} else continue;}//inShower.printPart(i - showPart);}}
 		}
@@ -102,35 +107,42 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 			//if (incEnergy >= E_Crit && ceil(crntRadLen) == floor(crntRadLen)){ //Bremsstralung
 			if (incEnergy >= E_Crit){ //Bremsstralung
 				if (verbose) std::cout << "Lepton Interaction" << std::endl;
-				newPos = crntLoc + randGen->exp(pow(radLen)); //Particle decays at random location
+				disp = randGen->Exp(radLen);
+				newPos = crntLoc + disp; //Location of decay
 
-				if (newPos >= radLen2Long(25)) {inShower.clearParticle(i - showPart);} //Particle outside detector attenuate
+				if (newPos >= radLen2Long(25)) {inShower.clearParticle(i - showPart);if (verbose) std::cout << "Outisde Cal" << std::endl;} //Particle outside cal attenuate
 				else{
 					//Lepton
+					inShower.diffLocVec.push_back(disp);
+					inShower.locVec.push_back(newPos);
 					inShower.idVec.push_back(inShower.idVec.at(i - showPart));
 					inShower.EVec.push_back(incEnergy*0.5);
 					//inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
 					//inShower.thetaVec.push_back(0);
 
 					//Photon
+					inShower.diffLocVec.push_back(disp);
+					inShower.locVec.push_back(newPos);
 					inShower.idVec.push_back(22);
 					inShower.EVec.push_back(incEnergy*0.5);
 					//inShower.pVec.push_back(incEnergy*0.5);
 					//inShower.thetaVec.push_back(0);
 
 					inShower.clearParticle(i - showPart); 
-					showPart+=1; //Increment number of incident showering particles by 1
+					//showPart+=1; //Increment number of incident showering particles by 1
 				}
+				showPart+=1; //Increment number of incident showering particles by 1
 			}
 
-			else if (incEnergy < E_Crit){  //This may be removed
+			//Range Bug is occuring !!here!!
+			else if (incEnergy < E_Crit){  
 				if (verbose){
 					std::cout << "No longer Bremsstrahlunging" << std::endl;
 					//inShower.printPart(i - showPart);
 				}
 				//Shower Attenuation
 				inShower.clearParticle(i - showPart); //Remove non radiative leptons
-				showPart+=1; //Increment number of showerin gparticles by one
+				showPart+=1; //Increment number of showering particles by one
 				
 				//continue;
 				//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
@@ -159,27 +171,8 @@ void ionELoss(showerR2 &inShower, double startRadLen, double endRadLen){
 	}
 }
 
-//Shower for full LLP event consisting of 2 particles
-//void showerAction_Full(std::vector<>, double E_Crit, double crntRadLen, bool verbose = false){
-	
-//}
-
-
-//Determine the physical location of each interaction given 
-std::vector<double> getIntrPoints(int NX0, double size){
-	std::vector<double> interPoints;
-	double X0 = size/(double) NX0;
-
-	for (int n = 1; n < NX0; n++){
-		interPoints.push_back(n*X0);
-	}
-
-	return interPoints;
-}
-
-
 //Shower and record total number of scintilation photons produced 
-std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVal){
+/*std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVal){
 	std::vector<int> showerScint; //Number of scintilation photons
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
 	showerR2 inShower = showerR2(initPart); //Set up shower object
@@ -189,16 +182,16 @@ std::vector<int> scintShower(int maxLen, double Einit, int partId, double critVa
 	for (int i = 0; i < maxLen; i++){
 		int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
 		showerScint.push_back(16000*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
-		showerAction1d(inShower,5,(double) i, false); //Shower after 1 radiation length
+		showerAction1d(inShower,5, X0, gen , false); //Shower after 1 radiation length
 		if (nChargeTrack == 0) break;
 	}
 
 	return showerScint;
-}
+}*/
 
 
 //Shower and record total number of scintilation photons produced (Multithreaded)
-void scintShower_Thread_Scint(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal){
+/*void scintShower_Thread_Scint(std::vector<int> &showerScint, int maxLen, double Einit, int partId, double critVal){
 	//std::vector<int> showerScint; //Number of scintilation photons
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
@@ -213,12 +206,12 @@ void scintShower_Thread_Scint(std::vector<int> &showerScint, int maxLen, double 
 		
 		//showerScint.push_back(gen->Poisson((double) 16000)*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
 		//ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
-		showerScint.push_back(16000*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
- 		showerAction1d(inShower,93.11,(double) i, false); //Shower after 1 radiation length
+		//showerScint.push_back(gen->Poisson(16000*(39.6/25)*nChargeTrack*0.12*0.15); //Homogenous Cal
+		showerAction1d(inShower,93.11,(double) X0, gen, false);
 	}
 
 	//return showerScint;
-}
+}*/
 
 
 //Shower and record total number of scintilation photons produced and store information about the number of particles produced (Multithreaded)
@@ -227,11 +220,13 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
 	showerR2 inShower = showerR2(initPart); //Set up shower object
+	int nChargeTrack = inShower.chargedTracks(); //Get the initial number of charged tracks
 
 	//Shower through the calorimter
 	//for (int i = 0; i < maxLen; i++){
 	while (nChargeTrack > 0){
-		//int nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
+		showerAction1d(inShower,93.11,X0, gen, true); //Showering occurs
+		nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
 		//if (nChargeTrack == 0) break; //End shower if there are no more charged particles
 		//std::cout << "Track Length between " << i << " and " << ++i << " = " << layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1)) << std::endl;
 		
@@ -240,13 +235,10 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 		//showerScint.push_back(gen->Poisson((double) 16000*(39.6/25)*nChargeTrack)*0.12*0.15); //Homogenous Cal with Poission Fluctuations
 		for (int i = 0; i < inShower.showerSize();i++){ //Loop through the shower
 			if (abs(inShower.idVec.at(i)) == 11){
-				
+				showerScint.push_back(gen->Poisson(16000*trackLen_scint(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*nChargeTrack*0.12*0.15); //Sampling Cal with Poission Fluctuations
 			}else continue;
-
 		}
-		showerScint.push_back(16000*trackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Sampling Cal with No
 		partNum.push_back(inShower.showerSize());
- 		showerAction1d(inShower,93.11,(double) i, gen, false); //Shower after 1 radiation length
 	}
 }
 
@@ -254,7 +246,7 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 int main(){
 	//std::cout << "Test" << std::endl;
 	//Test a very basic mean showering model of a 50 GeV positron in 1d going through 24 radiation lengths
-	double E0 = 500e3; //Starting energy in MeV
+	double E0 = 500; //Starting energy in MeV
 	//double E0 = 8;
 	particleR2 initPart = particleR2(E0,0,11);
 	showerR2 inShower = showerR2(initPart);
@@ -266,7 +258,8 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	std::vector<double> inputE = linspace(500,5000,10);
+	//std::vector<double> inputE = linspace(500,5000,10);
+	std::vector<double> inputE = linspace(500e-3,1,2);
 	std::vector<double> sumScintPhoto;
 
 	//long testPhoton = scintShower(25,E0,11);
@@ -300,24 +293,15 @@ int main(){
 		std::vector<int> showerVecScintArr[2]; //
 		std::vector<int> showerVecPartArr[2]; //
 
-		std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),25,E*1e3,11,93.11,randGen);
+		/*std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),25,E*1e3,11,93.11,randGen);
 		std::thread t2(scintShower_Thread_Full,std::ref(showerVecScint_pos),std::ref(showerVecPart_pos),25,E*1e3,11,93.11,randGen);
 
 		t1.join();
-		t2.join();
-		
-		/*
-		//Only getting scintilation photon energy
-		std::thread t1(scintShower_Thread_Scint,std::ref(showerVecScint_elec),25,E*1e3,11,93.11); //,randGen); //Electron Shower (Used critical energy for Polystyrene since scintilation in lead not interesting)
-		std::thread t2(scintShower_Thread_Scint,std::ref(showerVecScint_pos),25,E*1e3,-11,93.11); //,randGen); //Positron Shower
-
-		t1.join();
-		t2.join();
-		*/
+		t2.join();*/
 
 		//Single Threading
-		//scintShower_Thread(showerVecScint_elec,25,E,11,5);
-		//scintShower_Thread(showerVecScint_pos,25,E,-11,5);
+		scintShower_Thread_Full(showerVecScint_elec,showerVecPart_elec,25,E*1e3,11,93.11,randGen);
+		scintShower_Thread_Full(showerVecScint_pos,showerVecPart_pos,25,E*1e3,11,93.11,randGen);
 
 		//Update the shower vector array with the first index benig the largest vector
 		if (showerVecScint_elec.size() > showerVecScint_pos.size()){

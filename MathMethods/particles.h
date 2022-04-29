@@ -64,6 +64,7 @@ public:
 		idVec.push_back(incPart.id());
 		EVec.push_back(incPart.E());
 		locVec.push_back(0); //Push back particle location
+		diffLocVec.push_back(0);
 		//thetaVec.push_back(incPart.theta());
 		//pVec.push_back(incPart.p());
 	}
@@ -105,6 +106,7 @@ public:
 		this->idVec.erase(this->idVec.begin() + partIndx);
 		this->EVec.erase(this->EVec.begin() + partIndx);
 		this->locVec.erase(this->locVec.begin() + partIndx);
+		this->diffLocVec.erase(this->diffLocVec.begin() + partIndx);
 		//this->thetaVec.erase(this->thetaVec.begin() + partIndx);
 		//this->pVec.erase(this->pVec.begin() + partIndx);
 	}
@@ -123,6 +125,7 @@ public:
 	std::vector<int> idVec;
 	std::vector<double> EVec;
 	std::vector<double> locVec;
+	std::vector<double> diffLocVec;
 	//std::vector<double> thetaVec;
 	//std::vector<double> pVec;
 
