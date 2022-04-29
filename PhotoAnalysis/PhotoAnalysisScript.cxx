@@ -202,7 +202,7 @@ void showerEnergyPlotHomog(TFile *f){
 
 int main(){
 	std::cout << "Test" << std::endl; 
-	TFile *f = TFile::Open("ScintPhotoOut_Homogenous_Final_NoPoisson.root","READ");
+	TFile *f = TFile::Open("ScintPhotoOut_Sample_Final_Poisson.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
 

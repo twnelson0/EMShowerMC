@@ -58,7 +58,7 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 	for (int i = 0; i < inCount; i++){
 		double partTheta,partP;
 		double incEnergy = inShower.EVec.at(i - showPart);
-		double crntLoc = inShower.locVec.at(i);
+		double crntLoc = inShower.locVec.at(i - showPart);
 		double disp, newPos;
 
 		/*if (verbose){
@@ -67,10 +67,10 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 		}*/
 
 		if (verbose) std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
+		if (verbose) std::cout << "i - showPart = " << i - showPart << std::endl;
 
 		//Photon Interactions
 		if(inShower.idVec.at(i - showPart) == 22){
-			//if (incEnergy>= 2*m_e && ceil(crntRadLen) == floor(crntRadLen)){ //Pair production
 			if (incEnergy>= 2*m_e){ //Pair production
 				if (verbose) std::cout << "Pair production" << std::endl;
 				disp = randGen->Exp(radLen*9/7);//Distance particle travels before undergoing an interaction
@@ -104,14 +104,13 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 
 		//Lepton Interactions
 		else if (inShower.idVec.at(i - showPart) == 11 || inShower.idVec.at(i - showPart) == -11){
-			//if (incEnergy >= E_Crit && ceil(crntRadLen) == floor(crntRadLen)){ //Bremsstralung
 			if (incEnergy >= E_Crit){ //Bremsstralung
-				if (verbose) std::cout << "Lepton Interaction" << std::endl;
 				disp = randGen->Exp(radLen);
 				newPos = crntLoc + disp; //Location of decay
 
 				if (newPos >= radLen2Long(25)) {inShower.clearParticle(i - showPart);if (verbose) std::cout << "Outisde Cal" << std::endl;} //Particle outside cal attenuate
 				else{
+					if (verbose) std::cout << "Lepton Interaction" << std::endl;
 					//Lepton
 					inShower.diffLocVec.push_back(disp);
 					inShower.locVec.push_back(newPos);
@@ -139,10 +138,13 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 				if (verbose){
 					std::cout << "No longer Bremsstrahlunging" << std::endl;
 					//inShower.printPart(i - showPart);
+					std::cout << inShower.showerSize() << std::endl;
 				}
 				//Shower Attenuation
 				inShower.clearParticle(i - showPart); //Remove non radiative leptons
 				showPart+=1; //Increment number of showering particles by one
+
+				if (verbose) std::cout << "Particles Cleared" << std::endl; 
 				
 				//continue;
 				//if (ceil(crntRadLen + dt) == floor(crntRadLen + dt)) std::cout << "if else logic broken" << std::endl;
@@ -227,6 +229,7 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 	while (nChargeTrack > 0){
 		showerAction1d(inShower,93.11,X0, gen, true); //Showering occurs
 		nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
+		std::cout << "There are " << nChargeTrack << std::endl;
 		//if (nChargeTrack == 0) break; //End shower if there are no more charged particles
 		//std::cout << "Track Length between " << i << " and " << ++i << " = " << layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1)) << std::endl;
 		
@@ -258,8 +261,8 @@ int main(){
 
 	//Scintilation photons
 	std::vector<double> timeStampVec, leptVec;
-	//std::vector<double> inputE = linspace(500,5000,10);
-	std::vector<double> inputE = linspace(500e-3,1,2);
+	std::vector<double> inputE = linspace(500,5000,10);
+	//std::vector<double> inputE = linspace(500e-3,1,2);
 	std::vector<double> sumScintPhoto;
 
 	//long testPhoton = scintShower(25,E0,11);
@@ -293,15 +296,15 @@ int main(){
 		std::vector<int> showerVecScintArr[2]; //
 		std::vector<int> showerVecPartArr[2]; //
 
-		/*std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),25,E*1e3,11,93.11,randGen);
+		std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),25,E*1e3,11,93.11,randGen);
 		std::thread t2(scintShower_Thread_Full,std::ref(showerVecScint_pos),std::ref(showerVecPart_pos),25,E*1e3,11,93.11,randGen);
 
 		t1.join();
-		t2.join();*/
+		t2.join();
 
 		//Single Threading
-		scintShower_Thread_Full(showerVecScint_elec,showerVecPart_elec,25,E*1e3,11,93.11,randGen);
-		scintShower_Thread_Full(showerVecScint_pos,showerVecPart_pos,25,E*1e3,11,93.11,randGen);
+		//scintShower_Thread_Full(showerVecScint_elec,showerVecPart_elec,25,E*1e3,11,93.11,randGen);
+		//scintShower_Thread_Full(showerVecScint_pos,showerVecPart_pos,25,E*1e3,11,93.11,randGen);
 
 		//Update the shower vector array with the first index benig the largest vector
 		if (showerVecScint_elec.size() > showerVecScint_pos.size()){
