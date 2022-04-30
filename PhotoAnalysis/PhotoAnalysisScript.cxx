@@ -160,6 +160,92 @@ void showerPartPlot(TFile *f, double EVal, bool verbose = false){
 	c1->Close();
 }
 
+//Generate and Save singal shower Histogram
+void showerPhotoHist(TFile *f, double EVal, bool verbose = false){
+	//ROOT Objects
+	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
+
+	//Get the Energy to index map
+	std::map<double, int> eMap = EToIndx(f);
+
+	//Obtain the TSTrings and vector name in file
+	TString vecName, graphTitle,fileName; vecName.Form("PartNum_%d",eMap[EVal]);
+	graphTitle.Form("%.0lf GeV Event",EVal*2);
+	fileName.Form("%.0lfGeVEventPartPlot.png",EVal*2);
+	std::vector<int> *EVec;
+	f->GetObject(vecName,EVec);
+	if (verbose) std::cout << vecName << std::endl;
+	
+	//Vectors/Arrays for graph
+	std::vector<double> radLenVec, partVec;
+	int radLenVal = 0;
+
+	for (std::vector<int>::iterator it = EVec->begin(); it != EVec->end(); it++){
+		radLenVec.push_back((double)radLenVal);
+		partVec.push_back((double) *it);
+		if (verbose) {std::cout << *it << std::endl;}
+		radLenVal++;
+	}
+	
+	//Graph
+	TGraph *g1 = new TGraph(radLenVec.size(),&(radLenVec[0]),&(partVec[0]));
+	g1->SetMarkerColor(4);
+	g1->SetMarkerStyle(21);
+
+	//Draw Graph
+	g1->SetTitle(graphTitle);
+	g1->GetXaxis()->SetTitle("Radiation Lengths Traversed (X_{0})");
+	g1->GetYaxis()->SetTitle("Number of Particles in Shower");
+	c1->SetLogy();
+	g1->Draw("A*");
+
+	//Set up analytic function
+	TF1 *expf = new TF1("expf","2^(x + 1)",0,radLenVec.at(radLenVec.size() - 1));
+	expf->Draw("same");
+	c1->SaveAs(fileName);
+
+	//Memory
+	delete expf;
+	delete g1;
+	c1->Close();
+}
+
+
+//Generate and Save singal shower Histogram
+void showerPartHist(TFile *f, double EVal, bool verbose = false){
+	//ROOT Objects
+	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
+	TH1D *h1 = new TH1D();
+
+	//Get the Energy to index map
+	std::map<double, int> eMap = EToIndx(f);
+
+	//Obtain the TSTrings and vector name in file
+	TString histName, graphTitle,fileName; histName.Form("PartHist_%d",eMap[EVal]);
+	graphTitle.Form("%.0lf GeV Event",EVal*2);
+	fileName.Form("%.0lfGeVEventPartPlot.png",EVal*2);
+	std::vector<int> *EVec;
+	//f->GetObject(vecName,EVec);
+	h1 = (TH1D*)f->Get(histName);
+	if (verbose) std::cout << histName << std::endl;
+	
+	h1->SetStats(0);
+	h1->SetTitle(graphTitle);
+	h1->GetXaxis()->SetTitle("Radiaton Lengths {X_0}");
+	h1->GetYaxis()->SetTitle("Number of particles in shower");
+	h1->Draw();
+
+	//Set up analytic function
+	TF1 *expf = new TF1("expf","2^(x + 1)",0,h1->GetNbinsX());
+	expf->Draw("same");
+	c1->SaveAs(fileName);
+
+	//Memory
+	delete expf;
+	delete h1;
+	c1->Close();
+}
+
 
 void showerEnergyPlotHomog(TFile *f){
 	TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
@@ -226,7 +312,7 @@ int main(){
 		/*if (E == 1000 || E == 3000) showerScintPlot(f,E/2,true);
 		else showerScintPlot(f,E/2);*/
 		showerScintPlot(f,mapPair.first,true);
-		showerPartPlot(f,mapPair.first);
+		showerPartHist(f,mapPair.first);
 	}
 
 	//activeGeo(f);

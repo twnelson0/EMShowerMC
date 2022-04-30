@@ -225,7 +225,7 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 	int nChargeTrack = inShower.chargedTracks(); //Get the initial number of charged tracks
 	while (nChargeTrack > 0){
 		//showerAction1d(inShower,93.11,X0, gen, false); //Showering occurs
-		int photoSum;
+		int photoSum = 0;
 		nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
 		//std::cout << "There are " << nChargeTrack << std::endl;
 		//if (nChargeTrack == 0) break; //End shower if there are no more charged particles
@@ -239,8 +239,8 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 			double photoNum;
 			partHist->Fill(long2RadLen(inShower.locVec.at(i))); //Add particle
 			if (abs(inShower.idVec.at(i)) == 11){ 
-				if (sample) photoNum = gen->Poisson(16000*trackLen_scint(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.12*0.15; //Sampling Cal with Poission Fluctuations
-				else photoNum = (gen->Poisson(16000*(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.12*0.15); //Homogenous Cal with Poission Fluctuations
+				if (sample) photoNum = gen->Poisson(16000*trackLen_scint(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.15*0.15; //Sampling Cal with Poission Fluctuations
+				else photoNum = (gen->Poisson(16000*(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.15*0.15); //Homogenous Cal with Poission Fluctuations
 				photoSum += photoNum;
 				showerHist->Fill(inShower.locVec.at(i),photoNum);
 			}else continue;
@@ -329,11 +329,11 @@ int main(){
 		std::cout << "E = " << E << " GeV" << std::endl;
 
 		//Histogram for photon counting
-		TH1D *hPhoto_e = new TH1D("hPhoto_e",photoHistName,26,0,25);
+		TH1D *hPhoto_e = new TH1D(photoHistName,photoHistName,26,0,25);
 		TH1D *hPhoto_p = new TH1D("hPhoto_p","hPhoto_p",26,0,25);
 
 		//Histograms for particle counting
-		TH1D *hPart_e = new TH1D("hPart_e",partHistName,26,0,25);
+		TH1D *hPart_e = new TH1D(partHistName,partHistName,26,0,25);
 		TH1D *hPart_p = new TH1D("hPart_p","hPart_p",26,0,25);
 
 		//Get stopping length from the analytic model
