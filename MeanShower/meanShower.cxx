@@ -224,8 +224,8 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 		
 		//showerScint.push_back(gen->Poisson((double) 16000)*layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Get scintilation photons detected 
 		ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
-		//showerScint.push_back(gen->Poisson((double) 16000*(39.6/25)*nChargeTrack)*0.12*0.15); //Homogenous Cal with Poission Fluctuations
-		showerScint.push_back(16000*trackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.12*0.15); //Sampling Cal with No
+		showerScint.push_back(gen->Poisson((double) 16000*(39.6/25)*nChargeTrack)*0.15*0.15); //Homogenous Cal with Poission Fluctuations
+		//showerScint.push_back(16000*trackLen_scint(radLen2Long(i),radLen2Long(i+1))*nChargeTrack*0.15*0.15); //Sampling Cal with No
 		partNum.push_back(inShower.showerSize());
  		showerAction1d(inShower,93.11,(double) i, false); //Shower after 1 radiation length
 	}
@@ -255,7 +255,7 @@ int main(){
 
 	//Full code Starts here
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut_Sample_Final_NoPoisson.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_Homogenous_Final_NoPoisson.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	TRandom3 *randGen = new TRandom3();
 
