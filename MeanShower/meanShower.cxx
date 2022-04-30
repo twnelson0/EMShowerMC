@@ -116,16 +116,12 @@ void showerAction1d(showerR2 &inShower, double E_Crit, double radLen, TRandom3 *
 					inShower.locVec.push_back(newPos);
 					inShower.idVec.push_back(inShower.idVec.at(i - showPart));
 					inShower.EVec.push_back(incEnergy*0.5);
-					//inShower.pVec.push_back(sqrt(pow(incEnergy*0.5,2) - pow(m_e,2)));
-					//inShower.thetaVec.push_back(0);
 
 					//Photon
 					inShower.diffLocVec.push_back(disp);
 					inShower.locVec.push_back(newPos);
 					inShower.idVec.push_back(22);
 					inShower.EVec.push_back(incEnergy*0.5);
-					//inShower.pVec.push_back(incEnergy*0.5);
-					//inShower.thetaVec.push_back(0);
 
 					inShower.clearParticle(i - showPart); 
 					//showPart+=1; //Increment number of incident showering particles by 1
@@ -217,19 +213,20 @@ void ionELoss(showerR2 &inShower, double startRadLen, double endRadLen){
 
 
 //Shower and record total number of scintilation photons produced and store information about the number of particles produced (Multithreaded)
-void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &partNum, int maxLen, double Einit, int partId, double critVal, TRandom3 *gen){
+void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &partNum, TH1D* &partHist, TH1D* &showerHist, double Einit, int partId, double critVal, TRandom3 *gen){
 	//std::vector<int> showerScint; //Number of scintilation photons
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
 	showerR2 inShower = showerR2(initPart); //Set up shower object
-	int nChargeTrack = inShower.chargedTracks(); //Get the initial number of charged tracks
 
 	//Shower through the calorimter
 	//for (int i = 0; i < maxLen; i++){
+	showerAction1d(inShower,93.11,X0, gen, false); //First Shower
+	int nChargeTrack = inShower.chargedTracks(); //Get the initial number of charged tracks
 	while (nChargeTrack > 0){
-		showerAction1d(inShower,93.11,X0, gen, true); //Showering occurs
+		//showerAction1d(inShower,93.11,X0, gen, false); //Showering occurs
 		nChargeTrack = inShower.chargedTracks(); //Count the number of charged tracks
-		std::cout << "There are " << nChargeTrack << std::endl;
+		//std::cout << "There are " << nChargeTrack << std::endl;
 		//if (nChargeTrack == 0) break; //End shower if there are no more charged particles
 		//std::cout << "Track Length between " << i << " and " << ++i << " = " << layerTrackLen_scint(radLen2Long(i),radLen2Long(i+1)) << std::endl;
 		
@@ -237,11 +234,15 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 		//ionELoss(inShower,radLen2Long(i),radLen2Long(i + 1)); //Simulate Ionization energy loss
 		//showerScint.push_back(gen->Poisson((double) 16000*(39.6/25)*nChargeTrack)*0.12*0.15); //Homogenous Cal with Poission Fluctuations
 		for (int i = 0; i < inShower.showerSize();i++){ //Loop through the shower
-			if (abs(inShower.idVec.at(i)) == 11){
-				showerScint.push_back(gen->Poisson(16000*trackLen_scint(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*nChargeTrack*0.12*0.15); //Sampling Cal with Poission Fluctuations
+			//Count the number of particles and add them to a histogram
+			partHist->Fill(long2RadLen(inShower.locVec.at(i))); //Add particle
+			if (abs(inShower.idVec.at(i)) == 11){ 
+				//showerScint.push_back(gen->Poisson(16000*trackLen_scint(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.12*0.15); //Sampling Cal with Poission Fluctuations
+				showerScint.push_back(gen->Poisson(16000*(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.12*0.15); //Homogenous Cal with Poission Fluctuations
 			}else continue;
 		}
 		partNum.push_back(inShower.showerSize());
+		showerAction1d(inShower,93.11,X0, gen, false); //Showering occurs
 	}
 }
 
@@ -260,7 +261,6 @@ int main(){
 	int genArr[25];
 
 	//Scintilation photons
-	std::vector<double> timeStampVec, leptVec;
 	std::vector<double> inputE = linspace(500,5000,10);
 	//std::vector<double> inputE = linspace(500e-3,1,2);
 	std::vector<double> sumScintPhoto;
@@ -270,7 +270,7 @@ int main(){
 
 	//Full code Starts here
 	//ROOT Objects
-	TFile *f1 = new TFile("ScintPhotoOut_Sample_Final_NoPoisson.root","RECREATE");
+	TFile *f1 = new TFile("ScintPhotoOut_Homogenous_Final_Poisson.root","RECREATE");
 	//TCanvas *c1 = new TCanvas("c1","c1",500,500);
 	TRandom3 *randGen = new TRandom3();
 
@@ -282,7 +282,17 @@ int main(){
 	for ( double E : inputE) {
 		TString crntNameScintPhoto; crntNameScintPhoto.Form("Shower_%d",showerNum);
 		TString crntNameTotalPart; crntNameTotalPart.Form("PartNum_%d",showerNum);
+		TString photoHistName; photoHistName.Form("PhotoHist_%d",showerNum);
+		TString partHistName; partHistName.Form("PartHist_%d",showerNum);
 		std::cout << "E = " << E << " GeV" << std::endl;
+
+		//Histogram for photon counting
+		TH1D *hPhoto_e = new TH1D("hPhoto_e",photoHistName,26,0,25);
+		TH1D *hPhoto_p = new TH1D("hPhoto_p","hPhoto_p",26,0,25);
+
+		//Histograms for particle counting
+		TH1D *hPart_e = new TH1D("hPart_e",partHistName,26,0,25);
+		TH1D *hPart_p = new TH1D("hPart_p","hPart_p",26,0,25);
 
 		//Get stopping length from the analytic model
 		double stopX0 = log(E*1e3/93.11)/log(2);
@@ -296,8 +306,8 @@ int main(){
 		std::vector<int> showerVecScintArr[2]; //
 		std::vector<int> showerVecPartArr[2]; //
 
-		std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),25,E*1e3,11,93.11,randGen);
-		std::thread t2(scintShower_Thread_Full,std::ref(showerVecScint_pos),std::ref(showerVecPart_pos),25,E*1e3,11,93.11,randGen);
+		std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),std::ref(hPart_e),std::ref(hPhoto_e),E*1e3,11,93.11,randGen);
+		std::thread t2(scintShower_Thread_Full,std::ref(showerVecScint_pos),std::ref(showerVecPart_pos),std::ref(hPart_p),std::ref(hPhoto_p),E*1e3,11,93.11,randGen);
 
 		t1.join();
 		t2.join();
@@ -305,6 +315,14 @@ int main(){
 		//Single Threading
 		//scintShower_Thread_Full(showerVecScint_elec,showerVecPart_elec,25,E*1e3,11,93.11,randGen);
 		//scintShower_Thread_Full(showerVecScint_pos,showerVecPart_pos,25,E*1e3,11,93.11,randGen);
+
+		//Combine histograms and write them out
+		hPhoto_e->Add(hPhoto_p);
+		hPart_e->Add(hPart_p);
+		/*f1->WriteObject(&hPhoto_e,photoHistName);
+		f1->WriteObject(&hPart_e,partHistName);*/
+		hPhoto_e->Write();
+		hPart_e->Write();
 
 		//Update the shower vector array with the first index benig the largest vector
 		if (showerVecScint_elec.size() > showerVecScint_pos.size()){
@@ -358,6 +376,12 @@ int main(){
 		f1->WriteObject(&totalVecPart,crntNameTotalPart); 
 		
 		showerNum++;
+
+		//Memory managment
+		delete hPart_e;
+		delete hPhoto_e;
+		delete hPhoto_p;
+		delete hPart_p;
 		//for (int phot : totalVec){std::cout << phot << std::endl;}
 	} //Fill Scintilaiton photon vector
 	
