@@ -348,8 +348,8 @@ int main(){
 		std::vector<int> showerVecScintArr[2]; //
 		std::vector<int> showerVecPartArr[2]; //
 
-		std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),std::ref(hPart_e),std::ref(hPhoto_e),E*1e3,11,93.11,randGen,false);
-		std::thread t2(scintShower_Thread_Full,std::ref(showerVecScint_pos),std::ref(showerVecPart_pos),std::ref(hPart_p),std::ref(hPhoto_p),E*1e3,11,93.11,randGen,false);
+		std::thread t1(scintShower_Thread_Full,std::ref(showerVecScint_elec),std::ref(showerVecPart_elec),std::ref(hPart_e),std::ref(hPhoto_e),E*1e3,11,93.11,randGen,sampleBool);
+		std::thread t2(scintShower_Thread_Full,std::ref(showerVecScint_pos),std::ref(showerVecPart_pos),std::ref(hPart_p),std::ref(hPhoto_p),E*1e3,11,93.11,randGen,sampleBool);
 
 		t1.join();
 		t2.join();
@@ -435,7 +435,7 @@ int main(){
 	f1->WriteObject(&activeVec,"ActiveGeo");
 	f1->WriteObject(&passiveVec,"PassiveGeo");
 
-	delete randGen;
+	//delete randGen;
 	f1->Close();
 	
 	//MC Run
@@ -447,7 +447,8 @@ int main(){
 	for (double E : inputE){
 		TString vecName; vecName.Form("showerScintVec_%d",fileIndx); 
 		std::vector<double> indEScintPhoto;
-		for (int i = 0; i < 50; i++){
+		std::cout << E << " GeV" << std::endl;
+		for (int i = 0; i < 40; i++){
 			int scintNum_e = 0;
 			int scintNum_p = 0;
 
@@ -465,5 +466,6 @@ int main(){
 		fileIndx++;
 	}
 
+	delete randGen;
 	fMC->Close();
 }

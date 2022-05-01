@@ -276,6 +276,10 @@ void showerEnergyPlotHomog(TFile *f){
 	c1->Close();
 }
 
+void EReco(TFile *f){
+
+}
+
 /*void activeGeo(TFile *f){
 	std::vector<double> *activeLayers;
 	double sumVal = 0;
