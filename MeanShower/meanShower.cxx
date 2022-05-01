@@ -253,7 +253,7 @@ void scintShower_Thread_Full(std::vector<int> &showerScint, std::vector<int> &pa
 
 
 //Shower and only get infomration about the total number of photons (Multithreaded)
-void scintShower_MC(std::vector<int> &showerScint, std::vector<int> &partNum, double Einit, int partId, double critVal, TRandom3 *gen, bool sample){
+void scintShower_MC(int &showerScintNum, double Einit, int partId, double critVal, TRandom3 *gen, bool sample){
 	//std::vector<int> showerScint; //Number of scintilation photons
 	std::cout << "Starting Single Shower" << std::endl;
 	particleR2 initPart = particleR2(Einit,0,partId); //Set up initial particle
@@ -277,9 +277,9 @@ void scintShower_MC(std::vector<int> &showerScint, std::vector<int> &partNum, do
 			if (abs(inShower.idVec.at(i)) == 11){ 
 				if (sample) photoNum = gen->Poisson(16000*trackLen_scint(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.12*0.15; //Sampling Cal with Poission Fluctuations
 				else photoNum = (gen->Poisson(16000*(inShower.locVec.at(i) - inShower.diffLocVec.at(i),inShower.locVec.at(i)))*0.12*0.15); //Homogenous Cal with Poission Fluctuations
+				showerScintNum += photoNum;
 			}
 		}
-		showerScint.push_back(photoSum);
 		showerAction1d(inShower,93.11,X0, gen, false); //Showering occurs
 	}
 }
@@ -294,7 +294,7 @@ int main(){
 	showerR2 inShower = showerR2(initPart);
 	int Nitr = 500;
 	int photoArr[25];
-	bool sampleBool = false;
+	bool sampleBool = true;
 	//int layerArr[66];
 	//double eLossArr[25];
 	int radLenArr[25];
@@ -437,137 +437,33 @@ int main(){
 
 	delete randGen;
 	f1->Close();
-	//delete f1;
-
-	//Informal Debugging
 	
-	//Loop over the total scintilation photon vector
-	//for (double v : sumScintPhoto){std::cout << v << std::endl;}
+	//MC Run
+	TFile *fMC = new TFile("MCOut.root","RECREATE");
+	std::vector<double> scintPhoto;
+	fMC->WriteObject(&inputE,"Initial_E");
+	int fileIndx = 0;
 
-	//Graph SCintilation Photons as Sanity Check
-	/*TGraph *g1 = new TGraph(sumScintPhoto.size(),&(inputE[0]),&(sumScintPhoto[0]));
-	g1->GetYaxis()->SetTitle("Input Energy (GeV)");
-	g1->GetYaxis()->SetTitle("Total Number of Scintilation Photons");
-	g1->SetTitle("Total Scintilation Photons");
-	g1->Draw("A*");
-	c1->SaveAs("Scintilation_PhotonTest_2.pdf");
+	for (double E : inputE){
+		TString vecName; vecName.Form("showerScintVec_%d",fileIndx); 
+		std::vector<double> indEScintPhoto;
+		for (int i = 0; i < 50; i++){
+			int scintNum_e = 0;
+			int scintNum_p = 0;
 
-	delete g1;*/
-	//c1->Close();
+			//Shower
+			std::thread t1(scintShower_MC,std::ref(scintNum_e),E*1e3,11,93.11,randGen,false);
+			std::thread t2(scintShower_MC,std::ref(scintNum_p),E*1e3,11,93.11,randGen,false);
 
+			t1.join();
+			t2.join();
 
-	//Write Scintilation Photon Count and energies out to a csv file
-	/*std::ofstream scintCSV;
-	scintCSV.open("TestCSV.csv");
-	scintCSV << "Energy (MeV), Scintilation Photons" << "\n";
-	for (int i = 0; i < scintPhotoVec.size();i++){
-		scintCSV << inputE.at(i) << "," << scintPhoto.at(i) << "\n";
+			//Wrtie out total number of scintilation photons
+			indEScintPhoto.push_back(scintNum_e + scintNum_p);
+		}
+		fMC->WriteObject(&indEScintPhoto,vecName);
+		fileIndx++;
 	}
 
-	scintCSV.close();*/
-
-
-
-	//Debugging number of leptons
-	//int leptonNumber[25];
-	//int partArr[25];
-	//int genArray[25];
-
-	//Set up photon array
-	//for (int i = 0; i < 25; i++){photoArr[i] = 0; genArr[i] = i;}
-	
-	//Scintilation photon Histogram
-	
-
-	//std::vector<particleR2> showerVec;
-	//showerVec.push_back(initPart);
-
-	//int startLeptonNum = leptonNumber(inShower);
-	//int startLeptonNum = inShower.leptonNumber();
-	//double dt = 1/ (double) Nitr; //Continous step size in radiation lengths
-
-	//Propogate over 25 Radiation Lengths
-	/*for (int t = 0; t < 25; t++){ //Loop over the generations
-		std::cout << "Generation " << t << std::endl;
-		//genArray[t] = t;
-
-		//Count the number of charged tracks at the begining of each generation
-		int nChargeTrack = inShower.chargedTracks();
-		//leptonNumber[t] = nChargeTrack;
-		//partArr[t] = inShower.showerSize();
-		//inShower.showerDump();
-		//if (t == 1) {showerAction1d(inShower, 5, (double) t, true); inShower.showerDump();}
-		//else showerAction1d(inShower, 5, (double) t);
-		showerAction1d(inShower, , (double) t, false);
-		if (nChargeTrack == 0) {std::cout << "Ending Shower" << std::endl; break;} //End shower
-
-		//Check energy conservation 
-		//if (Ecrt != E0)std::cout << "!Energy is Not being conserved!\n" << Ecrt << " != " << E0 << std::endl;
-		
-
-		double nGamma = 0; //Number of Scintilation photons
-		//nGamma = 16000*layerTrackLen_scint(radLen2Long(t),radLen2Long(t+1))*nChargeTrack;
-		//if (t == 0) timeStampVec.push_back(radLen2Time(1,E0/pow(2,t),m_e)); //First track
-		//else timeStampVec.push_back(timeStampVec.at(t - 1) + radLen2Time(1,E0/pow(2,t),m_e));
-		leptVec.push_back((double) nChargeTrack);
-		timeStampVec.push_back((double) t);
-		scintPhotoVec.push_back(nGamma*0.15*0.12); //Scale by both PMT quantum efficency and 15% fiber transmission (12% for PMT place holder from LHCB paper)
-		//std::cout << nGamma << std::endl;
-
-		std::cout << "There are " << inShower.showerSize() << " particles in the shower" << std::endl;
-		//std::cout << "There where " << nChargeTrack << " charged tracks at the start" << std::endl;
-		//if (t == 0) inShower.showerDump();
-		//nGamma = (long) layerTrackLen_scint(radLen2Long((double)t),radLen2Long((double)(t + 1)))*chargedTrackNum*8000; //This is causing integer overflows these numbers are too big
-		//std::cout << "Number of scintilation photons = " << nGamma << std::endl;
-	}*/
-
-	//Graph the number of charged tracks and the number of particles
-	/*TGraph *gLep = new TGraph(25,genArr,leptonNumber); gLep->SetMarkerStyle(21); gLep->SetTitle("Charged Tracks");
-	TGraph *gAll = new TGraph(25,genArr,partArr); gAll->SetMarkerStyle(22); gAll->SetTitle("All Particles");
-	TLegend *l1 = new TLegend();
-	TMultiGraph *partGraph = new TMultiGraph();
-	partGraph->Add(gLep);
-	partGraph->Add(gAll);
-	partGraph->GetXaxis()->SetTitle("Depth X_{0}");
-	partGraph->GetYaxis()->SetTitle("Number of Particles");
-	partGraph->SetTitle("Charged Tracks Plot");
-	partGraph->Draw("AP");
-	c1->BuildLegend();
-	c1->SaveAs("Shower_Particle_Plot.pdf");
-	delete gLep;
-	delete gAll;
-	c1->Clear();*/
-
-
-	//Graph the number of Scintilation Photons
-	/*TGraph *gPhoto = new TGraph(scintPhotoVec.size(),&(timeStampVec[0]),&(scintPhotoVec[0]));
-	gPhoto->GetXaxis()->SetTitle("Generation");
-	gPhoto->GetYaxis()->SetTitle("Number of Scintilation Photons");
-	gPhoto->Draw("AL*");
-	c1->SaveAs("ScintPhotoPlot_1.pdf");
-	c1->Clear();
-	delete gPhoto;
-
-	//Graph the number of charged tracks per generation
-	TGraph *gCharge = new TGraph(scintPhotoVec.size(),&(timeStampVec[0]),&(leptVec[0]));
-	gCharge->GetXaxis()->SetTitle("Depth X_{0}");
-	gCharge->GetYaxis()->SetTitle("Number of ChargedTracks");
-	gCharge->SetTitle("Nubmer of Charged Tracks");
-	gCharge->Draw("AL*");
-	c1->SaveAs("ChargedTrackPlot.pdf");*/
-
-	//Graph the number of scintilation photons
-	/*TGraph *g2 = new TGraph(25,genArr,photoArr);
-	g2->GetXaxis()->SetTitle("Depth X_{0}");
-	g2->GetYaxis()->SetTitle("Number of Scintilation Photons");
-	g2->SetTitle("");*/
-
-	//c1->SaveAs("Electron_Positron_Number.pdf");
-
-	//Memory managment 
-	//delete randGen;
-	//delete g1;
-	//delete partGraph;
-	//delete gCharge;
-	//delete c1;
+	fMC->Close();
 }
