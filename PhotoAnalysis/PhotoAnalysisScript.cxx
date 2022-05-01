@@ -10,6 +10,7 @@
 #include "TString.h"
 #include "TGraph.h"
 #include "TF1.h"
+#include "TGraphErrors.h"
 
 
 //Get intial e+/e- energy from given index value
@@ -66,7 +67,26 @@ uint photoSum(TFile *f, double EVal){
 	}
 
 	return sumVal;
-} 
+}
+
+//Mean of a vector
+double vecMean(std::vector<auto> *inVec){
+	double meanVal = 0;
+	for (int i = 0; i < inVec->size(); i++){meanVal += inVec->at(i);}
+	return meanVal/inVec->size();
+}
+
+//Mean of square of vecor of data
+double vecSqrMean(std::vector<auto> *inVec){
+	double meanVal = 0;
+	for (int i = 0; i < inVec->size(); i++){meanVal += pow(inVec->at(i),2);}
+	return meanVal/inVec->size();
+}
+
+//Sample Standard Deviation
+double vecStdDev(std::vector<auto> *inVec){
+	return vecSqrMean(inVec) - pow(vecMean(inVec),2);
+}
 
 
 //Generate and Save singal shower Graph
@@ -276,7 +296,77 @@ void showerEnergyPlotHomog(TFile *f){
 	c1->Close();
 }
 
+double aHat(std::vector<double> x, std::vector<double> y, std::vector<double> sig){
+	double mVal = 0;
+	double denom = 0;
+	for (int i = 0; i < x.size(); i++){
+		mVal += x.at(i)*y.at(i)/pow(sig.at(i),2);
+		denom += pow(x.at(i),2)/pow(sig.at(i),2);
+	}
+
+	return mVal/denom;
+}
+
+double var_a(std::vector<double> x, std::vector<double> sig){
+	double varVal = 0;
+	for (int i = 0; i < x.size(); i++){
+		varVal += pow(x.at(i),2)/pow(sig.at(i),2);
+	}
+
+	return pow(varVal,-1);
+}
+
+std::vector<double> zeroFill(int N){
+	std::vector<double> zeroVec;
+	for (int i = 0; i < N; i++) {zeroVec.push_back(0);}
+
+	return zeroVec;
+}
+
 void EReco(TFile *f){
+	//Read in each energy value
+	std::map<double, int> EMap = EToIndx(f);
+	std::vector<double> errVec, meanNPhotoVec;
+	std::vector<double> inEVec;
+	double aVal, aSig;
+	//std::vector<double> EOverNVec;
+
+	for (const auto &mapPair : EMap){
+		inEVec.push_back((mapPair.first)*2);
+	}
+
+	std::vector<double> E_err = zeroFill(EMap.size());
+
+	for (int i = 0; i < EMap.size(); i++){
+		//Read out vectors
+		TString vecName; vecName.Form("Shower_%d",i);
+		std::vector<int> *crntPhotoVec;
+		f->GetObject(vecName,crntPhotoVec);
+
+		//Get mean and sigma of data
+		meanNPhotoVec.push_back(vecMean(crntPhotoVec));
+		errVec.push_back(sqrt(vecStdDev(crntPhotoVec)));
+	}
+
+	//Make a plot of the LLP eneryg and number of scintilation photons
+	TCanvas *c1 = new TCanvas("c1","c1",1500,1500);
+	TGraphErrors *g1 = new TGraphErrors(inEVec.size(),&(inEVec[0]),&(meanNPhotoVec[0]),&(E_err[0]),&(errVec[0]));
+
+	//Graph formatting
+	g1->GetXaxis()->SetTitle("LLP Energy (GeV)");
+	g1->GetYaxis()->SetTitle("Number of Scintillation Photons");
+	g1->Draw("ap");
+	c1->SaveAs("Final_ELLP_Plot.png");
+
+	delete g1;
+	c1->Clear();
+
+	//Get estimate for estimator coefficent
+	aVal = aHat(inEVec,meanNPhotoVec,errVec);
+	aSig = sqrt(var_a(inEVec,errVec));
+
+	std::cout << "aHat = " << aVal << std::endl;
+	std::cout << "aSig = " << aSig << std::endl;
 
 }
 

@@ -448,7 +448,7 @@ int main(){
 		TString vecName; vecName.Form("showerScintVec_%d",fileIndx); 
 		std::vector<double> indEScintPhoto;
 		std::cout << E << " GeV" << std::endl;
-		for (int i = 0; i < 40; i++){
+		for (int i = 0; i < 100; i++){
 			int scintNum_e = 0;
 			int scintNum_p = 0;
 
