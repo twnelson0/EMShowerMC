@@ -103,6 +103,10 @@ void showerScintPlot(TFile *f, double EVal, bool verbose = false){
 	g1->GetYaxis()->SetTitle("Number of Scintillation Photons");
 	c1->SetLogy();
 	g1->Draw("A*");
+
+	//Set up analytic function
+	TF1 *expf = new TF1("expf","(0.15)^2*16000*2^(x + 1)*1.584",0,radLenVec.at(radLenVec.size() - 1));
+	expf->Draw("same");
 	c1->SaveAs(fileName);
 
 	//Memory
@@ -202,6 +206,7 @@ void showerEnergyPlotHomog(TFile *f){
 
 int main(){
 	std::cout << "Test" << std::endl; 
+	//TFile *f = TFile::Open("ScintPhotoOut_Homogenous_Final_NoPoisson.root","READ");
 	TFile *f = TFile::Open("ScintPhotoOut_Sample_Final_NoPoisson.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
