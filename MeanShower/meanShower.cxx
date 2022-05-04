@@ -453,8 +453,8 @@ int main(){
 			int scintNum_p = 0;
 
 			//Shower
-			std::thread t1(scintShower_MC,std::ref(scintNum_e),E*1e3,11,93.11,randGen,false);
-			std::thread t2(scintShower_MC,std::ref(scintNum_p),E*1e3,11,93.11,randGen,false);
+			std::thread t1(scintShower_MC,std::ref(scintNum_e),E*1e3,11,93.11,randGen,true);
+			std::thread t2(scintShower_MC,std::ref(scintNum_p),E*1e3,11,93.11,randGen,true);
 
 			t1.join();
 			t2.join();

@@ -204,9 +204,12 @@ void showerPhotoHist(TFile *f, double EVal, bool verbose = false){
 	h1->SetStats(0);
 	h1->SetTitle(histTitle);
 	h1->GetXaxis()->SetTitle("Radiation Lengths (X_{0})");
-	h1->GetYaxis()->SetTitle("Number of Scintillation Photons");
+	//h1->GetYaxis()->SetTitle("Number of Scintillation Photons");
 	//c1->SetLogy();
 	h1->Draw();
+
+	TF1 *expf = new TF1("expf","(0.15)^2*16000*2^(x + 1)*1.584",0,h1->GetNbinsX());
+	//expf->Draw("same");
 
 	/*for (std::vector<int>::iterator it = EVec->begin(); it != EVec->end(); it++){
 		radLenVec.push_back((double)radLenVal);
@@ -230,6 +233,7 @@ void showerPhotoHist(TFile *f, double EVal, bool verbose = false){
 	//Memory
 	//delete expf;
 	delete h1;
+	delete expf;
 	c1->Close();
 }
 
@@ -255,7 +259,7 @@ void showerPartHist(TFile *f, double EVal, bool verbose = false){
 	h1->SetStats(0);
 	h1->SetTitle(graphTitle);
 	h1->GetXaxis()->SetTitle("Radiaton Lengths (X_{0})");
-	h1->GetYaxis()->SetTitle("Number of particles in shower");
+	//h1->GetYaxis()->SetTitle("Number of particles in shower");
 	//c1->SetLogy();
 	h1->Draw();
 
@@ -323,23 +327,28 @@ std::vector<double> zeroFill(int N){
 	return zeroVec;
 }
 
+double sigE(double N, double a, double aSig, double NSig){
+	return 1/a*sqrt(pow(NSig,2) + pow(N,2)/pow(a,2)*pow(aSig,2));
+}
+
 void EReco(TFile *f){
 	//Read in each energy value
 	std::map<double, int> EMap = EToIndx(f);
 	std::vector<double> errVec, meanNPhotoVec;
-	std::vector<double> inEVec;
+	std::vector<double> inEVec, resVec_Mine;
 	double aVal, aSig;
 	//std::vector<double> EOverNVec;
 
 	for (const auto &mapPair : EMap){
 		inEVec.push_back((mapPair.first)*2);
+		//resVec_Tav.push_back(sqrt(93.11e-3/inEVec.at(i)));
 	}
 
 	std::vector<double> E_err = zeroFill(EMap.size());
 
 	for (int i = 0; i < EMap.size(); i++){
 		//Read out vectors
-		TString vecName; vecName.Form("Shower_%d",i);
+		TString vecName; vecName.Form("showerScintVec_%d",i);
 		std::vector<int> *crntPhotoVec;
 		f->GetObject(vecName,crntPhotoVec);
 
@@ -353,13 +362,15 @@ void EReco(TFile *f){
 	TGraphErrors *g1 = new TGraphErrors(inEVec.size(),&(inEVec[0]),&(meanNPhotoVec[0]),&(E_err[0]),&(errVec[0]));
 
 	//Graph formatting
+	g1->SetTitle("");
 	g1->GetXaxis()->SetTitle("LLP Energy (GeV)");
 	g1->GetYaxis()->SetTitle("Number of Scintillation Photons");
+	g1->SetMarkerStyle(20);
 	g1->Draw("ap");
 	c1->SaveAs("Final_ELLP_Plot.png");
 
 	delete g1;
-	c1->Clear();
+	c1->Close();
 
 	//Get estimate for estimator coefficent
 	aVal = aHat(inEVec,meanNPhotoVec,errVec);
@@ -368,6 +379,34 @@ void EReco(TFile *f){
 	std::cout << "aHat = " << aVal << std::endl;
 	std::cout << "aSig = " << aSig << std::endl;
 
+	//Plot the sig/E
+	for (int i = 0; i < inEVec.size();i++){
+		resVec_Mine.push_back(sigE(meanNPhotoVec.at(i),aVal,aSig,errVec.at(i))/inEVec.at(i));
+		//std::cout << sigE(meanNPhotoVec.at(i),aVal,aSig,errVec.at(i)) << std::endl;
+		//std::cout << sigE(meanNPhotoVec.at(i),aVal,aSig,errVec.at(i)) - << std::endl;
+		//std::cout << pow(meanNPhotoVec.at(i),2) << std::endl;
+		std::cout << meanNPhotoVec.at(i)/aVal << std::endl;
+	}
+	
+	TCanvas *c2 = new TCanvas("c2","c2",1500,1500);
+	TGraph *g2 = new TGraph(inEVec.size(),&(inEVec[0]),&(resVec_Mine[0]));
+	c2->SetRightMargin(0.09);
+	c2->SetLeftMargin(0.15);
+	c2->SetBottomMargin(0.15);
+	g2->SetTitle("");
+	g2->GetXaxis()->SetTitle("LLP Energy (GeV)");
+	g2->GetYaxis()->SetTitle("#\sigma/E");
+	g2->SetMarkerStyle(21);
+	g2->Draw("ap");
+
+	//TF1 *tavRes = new TF1("tavRes","sqrt(93.11*10^(-3)/x)",1e3,10e3);
+	//tavRes->Draw("SAME");
+	c2->SaveAs("ResPlot.png");
+
+	
+	delete g2;
+	//delete tavRes;
+	c2->Close();
 }
 
 /*void activeGeo(TFile *f){
@@ -386,7 +425,8 @@ void EReco(TFile *f){
 
 int main(){
 	std::cout << "Test" << std::endl; 
-	TFile *f = TFile::Open("ScintPhotoOut_Sample_Final_Poisson.root","READ");
+	TFile *f = TFile::Open("ScintPhotoOut_Homogenous_Final_Poisson.root","READ");
+	//TFile *f = TFile::Open("ScintPhotoOut_Sample_Final_Poisson.root","READ");
 	std::cout << indxToEnergy(f, 0) << std::endl;
 	std::map<double, int> EMap = EToIndx(f);
 
@@ -426,6 +466,10 @@ int main(){
 
 	delete g1;
 	c1->Close();
+
+
+	TFile *f2 = TFile::Open("MCOut.root");
+	//EReco(f2);
 	
 
 	/*std::vector<int> *v;
@@ -435,7 +479,8 @@ int main(){
 		std::cout << *it << std::endl;
 	}*/
 
-	//Meomry
+	//Memory
 	delete f;
+	delete f2;
 }
 
